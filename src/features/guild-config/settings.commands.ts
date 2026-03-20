@@ -1,8 +1,10 @@
 import {
   type ChatInputCommandInteraction,
+  ContainerBuilder,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
+  TextDisplayBuilder,
 } from "discord.js";
 import { importFromCsv } from "../import/import.service";
 import {
@@ -12,6 +14,12 @@ import {
 import { upsertBackgroundBlob, upsertThemeColor } from "./guild-config.repo";
 
 const MAX_BACKGROUND_BYTES = 8 * 1024 * 1024; // 8 MB
+
+function container(content: string) {
+  return new ContainerBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(content),
+  );
+}
 
 export const settingsCommand = new SlashCommandBuilder()
   .setName("settings")
@@ -61,8 +69,8 @@ export async function handleSettings(
 ): Promise<void> {
   if (!interaction.guildId) {
     await interaction.reply({
-      content: "Server only.",
-      flags: MessageFlags.Ephemeral,
+      flags: MessageFlags.IsComponentsV2,
+      components: [container("This command can only be used in a server.")],
     });
     return;
   }
@@ -81,27 +89,36 @@ export async function handleSettings(
 async function handleSettingsBackground(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
 
   const attachment = interaction.options.getAttachment("image", true);
 
   if (!attachment.contentType?.startsWith("image/")) {
-    await interaction.editReply("The attachment must be an image file.");
+    await interaction.editReply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [container("The attachment must be an image file.")],
+    });
     return;
   }
 
   if (attachment.size > MAX_BACKGROUND_BYTES) {
-    await interaction.editReply(
-      `Image is too large. Maximum allowed size is ${MAX_BACKGROUND_BYTES / 1024 / 1024} MB.`,
-    );
+    await interaction.editReply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        container(
+          `Image is too large. Maximum allowed size is ${MAX_BACKGROUND_BYTES / 1024 / 1024} MB.`,
+        ),
+      ],
+    });
     return;
   }
 
   const response = await fetch(attachment.url);
   if (!response.ok) {
-    await interaction.editReply(
-      "Failed to download the image. Please try again.",
-    );
+    await interaction.editReply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [container("Failed to download the image. Please try again.")],
+    });
     return;
   }
 
@@ -113,26 +130,36 @@ async function handleSettingsBackground(
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
   invalidateBackgroundCache(interaction.guildId!);
 
-  await interaction.editReply("Background image updated successfully!");
+  await interaction.editReply({
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      container("## Settings: Background\n\nBackground image updated successfully!"),
+    ],
+  });
 }
 
 async function handleSettingsColor(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
 
   const color = interaction.options.getString("color", true);
 
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
   await upsertThemeColor(interaction.guildId!, color);
 
-  await interaction.editReply(`Theme color set to **${color}**.`);
+  await interaction.editReply({
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      container(`## Settings: Theme Color\n\nTheme color set to **${color}**.`),
+    ],
+  });
 }
 
 async function handleSettingsImportLevels(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
 
   const attachment = interaction.options.getAttachment("file", true);
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
@@ -145,13 +172,23 @@ async function handleSettingsImportLevels(
     );
     const mismatchNote =
       levelMismatches > 0
-        ? ` (${levelMismatches} levels recomputed from XP — CSV values did not match)`
-        : " (all levels matched recomputed values)";
-    await interaction.editReply(
-      `Successfully imported ${total} records.${mismatchNote}`,
-    );
+        ? `${levelMismatches} levels recomputed from XP — CSV values did not match.`
+        : "All levels matched recomputed values.";
+    await interaction.editReply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        container(
+          `## Settings: Import Levels\n\nSuccessfully imported **${total}** records.\n\n${mismatchNote}`,
+        ),
+      ],
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
-    await interaction.editReply(`Import failed: ${message}`);
+    await interaction.editReply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        container(`## Settings: Import Levels\n\nImport failed: ${message}`),
+      ],
+    });
   }
 }

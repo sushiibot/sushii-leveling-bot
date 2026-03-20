@@ -1,10 +1,17 @@
 import {
   type ChatInputCommandInteraction,
-  ComponentType,
+  ContainerBuilder,
   MessageFlags,
   SlashCommandBuilder,
+  TextDisplayBuilder,
 } from "discord.js";
 import { getRankPosition, getTopUsers, getUserLevel } from "./leveling.repo";
+
+function container(content: string) {
+  return new ContainerBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(content),
+  );
+}
 
 export const leaderboardCommand = new SlashCommandBuilder()
   .setName("leaderboard")
@@ -15,8 +22,8 @@ export async function handleLeaderboard(
 ): Promise<void> {
   if (!interaction.guildId) {
     await interaction.reply({
-      content: "This command can only be used in a server.",
-      flags: MessageFlags.Ephemeral,
+      flags: MessageFlags.IsComponentsV2,
+      components: [container("This command can only be used in a server.")],
     });
     return;
   }
@@ -53,16 +60,6 @@ export async function handleLeaderboard(
   await interaction.reply({
     allowedMentions: { parse: [] },
     flags: MessageFlags.IsComponentsV2,
-    components: [
-      {
-        type: ComponentType.Container,
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content,
-          },
-        ],
-      },
-    ],
+    components: [container(content)],
   });
 }

@@ -1,9 +1,10 @@
 import {
   type ChatInputCommandInteraction,
-  ComponentType,
+  ContainerBuilder,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
+  TextDisplayBuilder,
   roleMention,
 } from "discord.js";
 import {
@@ -11,6 +12,12 @@ import {
   getLevelRoles,
   upsertLevelRole,
 } from "../guild-config/guild-config.repo";
+
+function container(content: string) {
+  return new ContainerBuilder().addTextDisplayComponents(
+    new TextDisplayBuilder().setContent(content),
+  );
+}
 
 export const levelRoleCommand = new SlashCommandBuilder()
   .setName("level-role")
@@ -67,8 +74,8 @@ export async function handleLevelRole(
 ): Promise<void> {
   if (!interaction.guildId) {
     await interaction.reply({
-      content: "Server only.",
-      flags: MessageFlags.Ephemeral,
+      flags: MessageFlags.IsComponentsV2,
+      components: [container("This command can only be used in a server.")],
     });
     return;
   }
@@ -87,7 +94,7 @@ export async function handleLevelRole(
 async function handleLevelRoleUpsert(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
 
   const level = interaction.options.getInteger("level", true);
   const role = interaction.options.getRole("role", true);
@@ -95,30 +102,36 @@ async function handleLevelRoleUpsert(
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
   await upsertLevelRole(interaction.guildId!, level, role.id);
 
-  await interaction.editReply(
-    `Role ${role.toString()} will now be awarded at level ${level}.`,
-  );
+  await interaction.editReply({
+    allowedMentions: { parse: [] },
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      container(
+        `## Level Role Added\n\n${role.toString()} will now be awarded at level ${level}.`,
+      ),
+    ],
+  });
 }
 
 async function handleLevelRoleDelete(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
+  await interaction.deferReply();
 
   const level = interaction.options.getInteger("level", true);
 
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
   const deleted = await deleteLevelRole(interaction.guildId!, level);
 
-  if (deleted === 0) {
-    await interaction.editReply(
-      `No role reward was configured for level ${level}.`,
-    );
-  } else {
-    await interaction.editReply(
-      `Role reward for level ${level} has been removed.`,
-    );
-  }
+  const content =
+    deleted === 0
+      ? `No role reward was configured for level ${level}.`
+      : `## Level Role Removed\n\nRole reward for level ${level} has been removed.`;
+
+  await interaction.editReply({
+    flags: MessageFlags.IsComponentsV2,
+    components: [container(content)],
+  });
 }
 
 async function handleLevelRoleList(
@@ -142,16 +155,6 @@ async function handleLevelRoleList(
   await interaction.editReply({
     allowedMentions: { parse: [] },
     flags: MessageFlags.IsComponentsV2,
-    components: [
-      {
-        type: ComponentType.Container,
-        components: [
-          {
-            type: ComponentType.TextDisplay,
-            content,
-          },
-        ],
-      },
-    ],
+    components: [container(content)],
   });
 }
