@@ -1,7 +1,7 @@
-import type { Guild, GuildMember } from "discord.js";
-import { getGuildConfig } from "../guild-config/guild-config.service";
+import type { Guild } from "discord.js";
 import { getLevelRole } from "../guild-config/guild-config.repo";
-import { upsertXp } from "./leveling.repo";
+import { getGuildConfig } from "../guild-config/guild-config.service";
+import { getUserLevel, upsertXp } from "./leveling.repo";
 
 // cooldown tracking: "guildId:userId" → unix timestamp (ms)
 const cooldowns = new Map<string, number>();
@@ -29,9 +29,7 @@ export async function grantXp(
     Math.floor(Math.random() * (config.xpMax - config.xpMin + 1)) +
     config.xpMin;
 
-  const existing = await import("./leveling.repo").then((r) =>
-    r.getUserLevel(guildId, userId),
-  );
+  const existing = await getUserLevel(guildId, userId);
   const previousLevel = existing?.level ?? 0;
 
   const nowSec = Math.floor(now / 1000);
