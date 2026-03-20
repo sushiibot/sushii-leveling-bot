@@ -2,7 +2,6 @@ import type { Guild, GuildMember } from "discord.js";
 import { getGuildConfig } from "../guild-config/guild-config.service";
 import { getLevelRole } from "../guild-config/guild-config.repo";
 import { upsertXp } from "./leveling.repo";
-import { levelFromXp } from "./xp";
 
 // cooldown tracking: "guildId:userId" → unix timestamp (ms)
 const cooldowns = new Map<string, number>();
@@ -35,14 +34,11 @@ export async function grantXp(
   );
   const previousLevel = existing?.level ?? 0;
 
-  const currentXp = (existing?.xp ?? 0) + xpGain;
-  const newLevel = levelFromXp(currentXp);
-
   const nowSec = Math.floor(now / 1000);
-  await upsertXp(guildId, userId, username, xpGain, newLevel, nowSec);
+  const updated = await upsertXp(guildId, userId, username, xpGain, nowSec);
 
-  if (newLevel > previousLevel) {
-    await handleLevelUp(guildId, userId, newLevel, guild);
+  if (updated.level > previousLevel) {
+    await handleLevelUp(guildId, userId, updated.level, guild);
   }
 }
 

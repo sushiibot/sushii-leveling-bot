@@ -1,15 +1,17 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, sql, gt } from "drizzle-orm";
 import { db } from "../../db";
 import { userLevels } from "../../db/schema";
-import type { UserLevel } from "./leveling.types";
+import { UserLevel } from "./leveling.types";
+import { levelFromXp } from "./xp";
 
 export async function getUserLevel(
   guildId: string,
   userId: string,
 ): Promise<UserLevel | undefined> {
-  return db.query.userLevels.findFirst({
+  const row = await db.query.userLevels.findFirst({
     where: and(eq(userLevels.guildId, guildId), eq(userLevels.userId, userId)),
   });
+  return row ? UserLevel.from(row) : undefined;
 }
 
 export async function upsertXp(
@@ -17,19 +19,18 @@ export async function upsertXp(
   userId: string,
   username: string,
   xpGain: number,
-  newLevel: number,
   now: number,
 ): Promise<UserLevel> {
   const existing = await getUserLevel(guildId, userId);
 
   if (existing) {
     const newXp = existing.xp + xpGain;
-    const updatedLevel = Math.max(existing.level, newLevel);
+    const newLevel = levelFromXp(newXp);
     await db
       .update(userLevels)
       .set({
         xp: newXp,
-        level: updatedLevel,
+        level: newLevel,
         username,
         messageCount: existing.messageCount + 1,
         lastXpAt: now,
@@ -37,16 +38,17 @@ export async function upsertXp(
       .where(
         and(eq(userLevels.guildId, guildId), eq(userLevels.userId, userId)),
       );
-    return {
-      ...existing,
-      xp: newXp,
-      level: updatedLevel,
+    return UserLevel.from({
+      guildId,
+      userId,
       username,
+      xp: newXp,
       messageCount: existing.messageCount + 1,
       lastXpAt: now,
-    };
+    });
   } else {
-    const row: UserLevel = {
+    const newLevel = levelFromXp(xpGain);
+    await db.insert(userLevels).values({
       guildId,
       userId,
       username,
@@ -54,9 +56,15 @@ export async function upsertXp(
       level: newLevel,
       messageCount: 1,
       lastXpAt: now,
-    };
-    await db.insert(userLevels).values(row);
-    return row;
+    });
+    return UserLevel.from({
+      guildId,
+      userId,
+      username,
+      xp: xpGain,
+      messageCount: 1,
+      lastXpAt: now,
+    });
   }
 }
 
@@ -76,13 +84,25 @@ export async function getRankPosition(
   return (result[0]?.count ?? 0) + 1;
 }
 
+export interface BulkUpsertResult {
+  total: number;
+  levelMismatches: number;
+}
+
 export async function bulkUpsertUserLevels(
   guildId: string,
   rows: Array<{ userId: string; username: string; xp: number; level: number }>,
-): Promise<void> {
-  if (rows.length === 0) return;
+): Promise<BulkUpsertResult> {
+  if (rows.length === 0) return { total: 0, levelMismatches: 0 };
+
+  let levelMismatches = 0;
 
   for (const row of rows) {
+    const computedLevel = levelFromXp(row.xp);
+    if (computedLevel !== row.level) {
+      levelMismatches++;
+    }
+
     await db
       .insert(userLevels)
       .values({
@@ -90,7 +110,7 @@ export async function bulkUpsertUserLevels(
         userId: row.userId,
         username: row.username,
         xp: row.xp,
-        level: row.level,
+        level: computedLevel,
         messageCount: 0,
         lastXpAt: 0,
       })
@@ -99,8 +119,11 @@ export async function bulkUpsertUserLevels(
         set: {
           username: row.username,
           xp: row.xp,
-          level: row.level,
+          level: computedLevel,
         },
+        where: gt(sql`excluded.xp`, userLevels.xp),
       });
   }
+
+  return { total: rows.length, levelMismatches };
 }
