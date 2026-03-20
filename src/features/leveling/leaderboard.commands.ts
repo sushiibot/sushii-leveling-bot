@@ -4,7 +4,7 @@ import {
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
-import { getTopUsers } from "./leveling.repo";
+import { getRankPosition, getTopUsers, getUserLevel } from "./leveling.repo";
 
 export const leaderboardCommand = new SlashCommandBuilder()
   .setName("leaderboard")
@@ -21,9 +21,12 @@ export async function handleLeaderboard(
     return;
   }
 
-  await interaction.deferReply();
+  const [topUsers, userLevel] = await Promise.all([
+    getTopUsers(interaction.guildId, 10),
+    getUserLevel(interaction.guildId, interaction.user.id),
+  ]);
 
-  const topUsers = await getTopUsers(interaction.guildId, 10);
+  const serverName = interaction.guild?.name ?? "Server";
 
   let content: string;
   if (topUsers.length === 0) {
@@ -32,10 +35,22 @@ export async function handleLeaderboard(
     const lines = topUsers.map(
       (user, i) => `${i + 1}. <@${user.userId}> - Level ${user.level}`,
     );
-    content = `## Leaderboard\n\n${lines.join("\n")}`;
+
+    let footer: string;
+    const inTop10 = topUsers.some((u) => u.userId === interaction.user.id);
+    if (inTop10) {
+      footer = "You're in the top 10!";
+    } else if (userLevel && userLevel.xp > 0) {
+      const rank = await getRankPosition(interaction.guildId, interaction.user.id);
+      footer = `Your current rank is #${rank}. Keep earning XP to enter the top 10!`;
+    } else {
+      footer = "Start chatting to earn XP and appear on the leaderboard!";
+    }
+
+    content = `## ${serverName} Leaderboard\n\n${lines.join("\n")}\n\n${footer}`;
   }
 
-  await interaction.editReply({
+  await interaction.reply({
     allowedMentions: { parse: [] },
     flags: MessageFlags.IsComponentsV2,
     components: [
