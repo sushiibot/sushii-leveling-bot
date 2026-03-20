@@ -23,7 +23,10 @@ export async function handleImportLevels(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   if (!interaction.guildId) {
-    await interaction.reply({ content: "Server only.", flags: MessageFlags.Ephemeral });
+    await interaction.reply({
+      content: "Server only.",
+      flags: MessageFlags.Ephemeral,
+    });
     return;
   }
 

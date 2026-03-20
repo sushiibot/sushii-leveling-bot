@@ -11,7 +11,9 @@ export function parseCsv(text: string): CsvRow[] {
     throw new Error("CSV must contain a header row and at least one data row.");
   }
 
-  const headers = lines[0]!.split(",").map((h) => h.trim().toLowerCase());
+  const headers = (lines[0] ?? "")
+    .split(",")
+    .map((h) => h.trim().toLowerCase());
 
   const platformIdIdx = headers.indexOf("platformid");
   const usernameIdx = headers.indexOf("username");
@@ -32,7 +34,7 @@ export function parseCsv(text: string): CsvRow[] {
   const rows: CsvRow[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const line = lines[i]!.trim();
+    const line = lines[i]?.trim();
     if (!line) continue;
 
     const cols = line.split(",");
@@ -53,7 +55,7 @@ export function parseCsv(text: string): CsvRow[] {
     const xp = parseInt(xpRaw, 10);
     const level = parseInt(levelRaw, 10);
 
-    if (isNaN(xp) || isNaN(level)) {
+    if (Number.isNaN(xp) || Number.isNaN(level)) {
       throw new Error(`Non-numeric XP or level at line ${i + 1}: ${line}`);
     }
 

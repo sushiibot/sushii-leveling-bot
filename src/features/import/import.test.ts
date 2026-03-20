@@ -108,8 +108,8 @@ describe("import + rank calculation", () => {
   test("rank order matches XP descending order", async () => {
     const sortedByXp = [...rows].sort((a, b) => b.xp - a.xp);
 
-    for (let i = 0; i < sortedByXp.length; i++) {
-      const rank = await getRankPosition(GUILD_ID, sortedByXp[i]!.platformId);
+    for (const [i, row] of sortedByXp.entries()) {
+      const rank = await getRankPosition(GUILD_ID, row.platformId);
       expect(rank).toBe(i + 1);
     }
   });
