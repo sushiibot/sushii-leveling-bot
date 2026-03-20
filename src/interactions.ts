@@ -19,6 +19,7 @@ export function registerInteractions(client: Client): void {
         command: interaction.commandName,
         subcommand: interaction.options.getSubcommand(false),
         userId: interaction.user.id,
+        username: interaction.user.username,
         guildId: interaction.guildId,
       },
       "Command received",
