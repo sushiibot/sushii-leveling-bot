@@ -25,6 +25,7 @@ import {
   levelCommand,
 } from "./features/leveling/leveling.commands";
 import { registerLevelingEvents } from "./features/leveling/leveling.events";
+import logger from "./logger";
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
@@ -32,14 +33,14 @@ if (!token) throw new Error("DISCORD_TOKEN is not set");
 if (!clientId) throw new Error("CLIENT_ID is not set");
 
 runMigrations();
-console.log("Migrations applied.");
+logger.info("Migrations applied.");
 
 const client = createClient();
 
 registerLevelingEvents(client);
 
 client.on(Events.ClientReady, async (c) => {
-  console.log(`Logged in as ${c.user.tag}`);
+  logger.info(`Logged in as ${c.user.tag}`);
 
   const permissions = (
     PermissionFlagsBits.ViewChannel |
@@ -54,7 +55,7 @@ client.on(Events.ClientReady, async (c) => {
     PermissionFlagsBits.ManageRoles
   ).toString();
   const inviteUrl = `https://discord.com/api/oauth2/authorize?client_id=${c.user.id}&permissions=${permissions}&scope=bot%20applications.commands`;
-  console.log(`Invite URL: ${inviteUrl}`);
+  logger.info({ inviteUrl }, "Invite URL");
 
   const commands = [
     levelCommand,
@@ -66,7 +67,7 @@ client.on(Events.ClientReady, async (c) => {
 
   const rest = new REST().setToken(token);
   await rest.put(Routes.applicationCommands(clientId), { body: commands });
-  console.log(`Registered ${commands.length} slash commands.`);
+  logger.info(`Registered ${commands.length} slash commands.`);
 });
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -91,14 +92,14 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
         break;
     }
   } catch (err) {
-    console.error(`Error handling command ${interaction.commandName}:`, err);
+    logger.error(err, `Error handling command ${interaction.commandName}`);
     const msg = "An error occurred while executing this command.";
     if (interaction.replied || interaction.deferred) {
-      await interaction.editReply(msg).catch(console.error);
+      await interaction.editReply(msg).catch((e) => logger.error(e));
     } else {
       await interaction
         .reply({ content: msg, flags: MessageFlags.Ephemeral })
-        .catch(console.error);
+        .catch((e) => logger.error(e));
     }
   }
 });

@@ -1,4 +1,5 @@
 import type { Guild } from "discord.js";
+import logger from "../../logger";
 import { getLevelRole } from "../guild-config/guild-config.repo";
 import { getGuildConfig } from "../guild-config/guild-config.service";
 import { getUserLevel, upsertXp } from "./leveling.repo";
@@ -53,9 +54,9 @@ async function handleLevelUp(
     const member = await guild.members.fetch(userId);
     await member.roles.add(levelRole.roleId);
   } catch (err) {
-    console.error(
-      `Failed to assign role ${levelRole.roleId} to ${userId} in ${guildId}:`,
+    logger.error(
       err,
+      `Failed to assign role ${levelRole.roleId} to ${userId} in ${guildId}`,
     );
   }
 }

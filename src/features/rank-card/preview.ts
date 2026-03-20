@@ -5,6 +5,7 @@
  *   bun src/features/rank-card/preview.ts [--port 3000]
  */
 
+import logger from "../../logger";
 import { totalXpForLevel, xpToNextLevel } from "../leveling/xp";
 import { renderRankCard } from "./rank-card.service";
 
@@ -65,7 +66,7 @@ async function handleRender(url: URL): Promise<Response> {
         messageCount: 0,
         lastXpAt: 0,
       },
-      isNaN(rank as number) ? null : rank,
+      Number.isNaN(rank as number) ? null : rank,
       avatarUrl,
       background,
     );
@@ -73,8 +74,8 @@ async function handleRender(url: URL): Promise<Response> {
       headers: { "Content-Type": "image/png", "Cache-Control": "no-store" },
     });
   } catch (err) {
-    console.error("Render error:", err);
-    return new Response("Render failed: " + String(err), { status: 500 });
+    logger.error(err, "Render error");
+    return new Response(`Render failed: ${String(err)}`, { status: 500 });
   }
 }
 
@@ -367,5 +368,5 @@ const server = Bun.serve({
   },
 });
 
-console.log(`\nRank card preview → http://localhost:${server.port}`);
-console.log("Open in browser. Ctrl+C to stop.\n");
+logger.info(`Rank card preview → http://localhost:${server.port}`);
+logger.info("Open in browser. Ctrl+C to stop.");
