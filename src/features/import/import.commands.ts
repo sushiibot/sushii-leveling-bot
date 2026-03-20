@@ -29,8 +29,11 @@ export async function handleImportLevels(
   const attachment = interaction.options.getAttachment("file", true);
 
   try {
-    const count = await importFromCsv(interaction.guildId, attachment.url);
-    await interaction.editReply(`Successfully imported ${count} records.`);
+    const { total, levelMismatches } = await importFromCsv(interaction.guildId, attachment.url);
+    const mismatchNote = levelMismatches > 0
+      ? ` (${levelMismatches} levels recomputed from XP — CSV values did not match)`
+      : " (all levels matched recomputed values)";
+    await interaction.editReply(`Successfully imported ${total} records.${mismatchNote}`);
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     await interaction.editReply(`Import failed: ${message}`);

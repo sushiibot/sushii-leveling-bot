@@ -1,10 +1,15 @@
 import { parseCsv } from "./csv";
 import { bulkUpsertUserLevels } from "../leveling/leveling.repo";
 
+export interface ImportResult {
+  total: number;
+  levelMismatches: number;
+}
+
 export async function importFromCsv(
   guildId: string,
   csvUrl: string,
-): Promise<number> {
+): Promise<ImportResult> {
   const response = await fetch(csvUrl);
   if (!response.ok) {
     throw new Error("Failed to download the CSV file.");
@@ -13,7 +18,7 @@ export async function importFromCsv(
   const text = await response.text();
   const rows = parseCsv(text);
 
-  await bulkUpsertUserLevels(
+  const result = await bulkUpsertUserLevels(
     guildId,
     rows.map((r) => ({
       userId: r.platformId,
@@ -23,5 +28,5 @@ export async function importFromCsv(
     })),
   );
 
-  return rows.length;
+  return result;
 }
