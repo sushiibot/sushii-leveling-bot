@@ -13,6 +13,7 @@ export const guildConfigs = sqliteTable("guild_configs", {
   cooldownSeconds: integer("cooldown_seconds").notNull().default(60),
   backgroundImage: blob("background_image", { mode: "buffer" }),
   backgroundImageType: text("background_image_type"),
+  themeColor: text("theme_color").notNull().default("yellow"),
 });
 
 export const userLevels = sqliteTable(

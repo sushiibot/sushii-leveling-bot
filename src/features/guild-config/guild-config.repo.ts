@@ -11,6 +11,19 @@ export async function getGuildConfigRow(
   });
 }
 
+export async function upsertThemeColor(
+  guildId: string,
+  themeColor: string,
+): Promise<void> {
+  await db
+    .insert(guildConfigs)
+    .values({ guildId, themeColor })
+    .onConflictDoUpdate({
+      target: guildConfigs.guildId,
+      set: { themeColor },
+    });
+}
+
 export async function upsertBackgroundBlob(
   guildId: string,
   blob: Buffer,

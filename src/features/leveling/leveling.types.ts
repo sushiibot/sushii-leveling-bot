@@ -36,6 +36,7 @@ export interface GuildConfig {
   cooldownSeconds: number;
   backgroundImage: Buffer | null;
   backgroundImageType: string | null;
+  themeColor: string;
 }
 
 export interface LevelRole {

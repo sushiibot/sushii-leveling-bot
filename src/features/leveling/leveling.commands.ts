@@ -64,6 +64,7 @@ export async function handleLevel(
     rank,
     avatarUrl,
     config.backgroundImage,
+    config.themeColor,
   );
 
   const attachment = new AttachmentBuilder(imageBuffer, {

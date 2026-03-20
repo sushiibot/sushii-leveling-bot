@@ -1,0 +1,1 @@
+ALTER TABLE `guild_configs` ADD `theme_color` text DEFAULT 'yellow' NOT NULL;

@@ -18,5 +18,6 @@ export async function getGuildConfig(guildId: string): Promise<GuildConfig> {
       ? Buffer.from(row.backgroundImage)
       : null,
     backgroundImageType: row?.backgroundImageType ?? null,
+    themeColor: row?.themeColor ?? "yellow",
   };
 }

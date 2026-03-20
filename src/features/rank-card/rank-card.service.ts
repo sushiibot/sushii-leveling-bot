@@ -39,14 +39,47 @@ const MOCHA = {
   subtext0: "#a6adc8",
   subtext1: "#bac2de",
   text: "#cdd6f4",
-  blue: "#89b4fa",
-  yellow: "#f9e2af",
+  rosewater: "#f5e0dc",
+  flamingo: "#f2cdcd",
+  pink: "#f5c2e7",
   mauve: "#cba6f7",
-  sapphire: "#74c7ec",
-  sky: "#89dceb",
-  green: "#a6e3a1",
+  red: "#f38ba8",
+  maroon: "#eba0ac",
   peach: "#fab387",
-};
+  yellow: "#f9e2af",
+  green: "#a6e3a1",
+  teal: "#94e2d5",
+  sky: "#89dceb",
+  sapphire: "#74c7ec",
+  blue: "#89b4fa",
+  lavender: "#b4befe",
+} as const;
+
+type AccentColor = keyof typeof MOCHA_ACCENTS;
+const MOCHA_ACCENTS = {
+  rosewater: MOCHA.rosewater,
+  flamingo: MOCHA.flamingo,
+  pink: MOCHA.pink,
+  mauve: MOCHA.mauve,
+  red: MOCHA.red,
+  maroon: MOCHA.maroon,
+  peach: MOCHA.peach,
+  yellow: MOCHA.yellow,
+  green: MOCHA.green,
+  teal: MOCHA.teal,
+  sky: MOCHA.sky,
+  sapphire: MOCHA.sapphire,
+  blue: MOCHA.blue,
+  lavender: MOCHA.lavender,
+} as const;
+
+export const CATPPUCCIN_ACCENT_COLORS = Object.keys(
+  MOCHA_ACCENTS,
+) as AccentColor[];
+
+function resolveAccentColor(themeColor: string): string {
+  return MOCHA_ACCENTS[themeColor as AccentColor] ?? MOCHA.yellow;
+}
 
 // ---------------------------------------------------------------------------
 // Layout constants
@@ -92,7 +125,9 @@ export async function renderRankCard(
   rank: number | null,
   avatarUrl: string,
   backgroundImage: Buffer | null,
+  themeColor = "yellow",
 ): Promise<Buffer> {
+  const accent = resolveAccentColor(themeColor);
   const canvas = createCanvas(CARD_WIDTH, CARD_HEIGHT);
   const ctx = canvas.getContext("2d");
 
@@ -106,7 +141,7 @@ export async function renderRankCard(
   ctx.stroke();
 
   // --- Avatar with ring ---
-  await drawAvatar(ctx, avatarUrl);
+  await drawAvatar(ctx, avatarUrl, accent);
 
   // --- Username ---
   ctx.fillStyle = MOCHA.text;
@@ -121,7 +156,7 @@ export async function renderRankCard(
     "LEVEL",
     String(userLevel.level),
     STATS_RIGHT - 160,
-    MOCHA.yellow,
+    accent,
   );
   drawStatBlock(
     ctx,
@@ -136,7 +171,7 @@ export async function renderRankCard(
   const xpNeeded = xpForNextLevelUp(userLevel.level);
   const progress = xpNeeded > 0 ? Math.min(currentXpInLevel / xpNeeded, 1) : 0;
 
-  drawProgressBar(ctx, progress);
+  drawProgressBar(ctx, progress, accent);
 
   // --- XP label ---
   const xpLabel = formatXp(currentXpInLevel, xpNeeded);
@@ -197,6 +232,7 @@ async function drawBackground(
 async function drawAvatar(
   ctx: SKRSContext2D,
   avatarUrl: string,
+  accent: string,
 ): Promise<void> {
   const cx = AVATAR_X + AVATAR_SIZE / 2;
   const cy = AVATAR_Y + AVATAR_SIZE / 2;
@@ -206,7 +242,7 @@ async function drawAvatar(
   ctx.save();
   ctx.beginPath();
   ctx.arc(cx, cy, r + AVATAR_RING, 0, Math.PI * 2);
-  ctx.fillStyle = MOCHA.yellow;
+  ctx.fillStyle = accent;
   ctx.fill();
   ctx.restore();
 
@@ -252,7 +288,11 @@ function drawStatBlock(
   ctx.textAlign = "left";
 }
 
-function drawProgressBar(ctx: SKRSContext2D, progress: number): void {
+function drawProgressBar(
+  ctx: SKRSContext2D,
+  progress: number,
+  accent: string,
+): void {
   // Track — semi-transparent dark glass that blends with any background
   ctx.fillStyle = "rgba(0, 0, 0, 0.50)";
   roundedRectPath(ctx, BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, BAR_RADIUS);
@@ -264,9 +304,9 @@ function drawProgressBar(ctx: SKRSContext2D, progress: number): void {
 
     // Glow effect — soft shadow behind fill
     ctx.save();
-    ctx.shadowColor = MOCHA.yellow;
+    ctx.shadowColor = accent;
     ctx.shadowBlur = 4;
-    ctx.fillStyle = MOCHA.yellow;
+    ctx.fillStyle = accent;
     roundedRectPath(ctx, BAR_X, BAR_Y, fillWidth, BAR_HEIGHT, BAR_RADIUS);
     ctx.fill();
     ctx.restore();
