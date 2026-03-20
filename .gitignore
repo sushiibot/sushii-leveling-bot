@@ -35,3 +35,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 
 # SQLite database
 data/
+
+# Claude Code IDE settings
+.claude/
+
+# OpenSpec
+openspec/
