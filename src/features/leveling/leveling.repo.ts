@@ -1,4 +1,4 @@
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { userLevels } from "../../db/schema";
 import { UserLevel } from "./leveling.types";
@@ -62,6 +62,18 @@ export async function getRankPosition(
       ),
     );
   return (result[0]?.count ?? 0) + 1;
+}
+
+export async function getTopUsers(
+  guildId: string,
+  limit = 10,
+): Promise<UserLevel[]> {
+  const rows = await db.query.userLevels.findMany({
+    where: eq(userLevels.guildId, guildId),
+    orderBy: desc(userLevels.xp),
+    limit,
+  });
+  return rows.map(UserLevel.from);
 }
 
 export interface BulkUpsertResult {
