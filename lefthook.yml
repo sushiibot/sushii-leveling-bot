@@ -1,0 +1,6 @@
+pre-commit:
+  jobs:
+    - name: biome-check
+      glob: "src/**/*.{ts,tsx,js,jsx}"
+      run: bunx biome check --write {staged_files}
+      stage_fixed: true
