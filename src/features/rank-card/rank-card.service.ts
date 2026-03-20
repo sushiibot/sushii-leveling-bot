@@ -253,8 +253,8 @@ function drawStatBlock(
 }
 
 function drawProgressBar(ctx: SKRSContext2D, progress: number): void {
-  // Track
-  ctx.fillStyle = MOCHA.surface0;
+  // Track — semi-transparent dark glass that blends with any background
+  ctx.fillStyle = "rgba(0, 0, 0, 0.50)";
   roundedRectPath(ctx, BAR_X, BAR_Y, BAR_WIDTH, BAR_HEIGHT, BAR_RADIUS);
   ctx.fill();
 
