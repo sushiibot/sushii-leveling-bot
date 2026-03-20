@@ -36,6 +36,9 @@ report.[0-9]_.[0-9]_.[0-9]_.[0-9]_.json
 # SQLite database
 data/
 
+# MEE6 export CSVs (raw data, only testdata/ fixture is tracked)
+/*.csv
+
 # Claude Code IDE settings
 .claude/
 
