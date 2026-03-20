@@ -22,7 +22,6 @@ export const userLevels = sqliteTable(
     userId: text("user_id").notNull(),
     username: text("username").notNull().default(""),
     xp: integer("xp").notNull().default(0),
-    level: integer("level").notNull().default(0),
     messageCount: integer("message_count").notNull().default(0),
     lastXpAt: integer("last_xp_at").notNull().default(0),
   },

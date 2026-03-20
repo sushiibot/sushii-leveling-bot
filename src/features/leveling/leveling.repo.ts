@@ -21,53 +21,31 @@ export async function upsertXp(
   xpGain: number,
   now: number,
 ): Promise<UserLevel> {
-  const existing = await getUserLevel(guildId, userId);
-
-  if (existing) {
-    const newXp = existing.xp + xpGain;
-    const newLevel = levelFromXp(newXp);
-    await db
-      .update(userLevels)
-      .set({
-        xp: newXp,
-        level: newLevel,
+  const rows = await db
+    .insert(userLevels)
+    .values({
+      guildId,
+      userId,
+      username,
+      xp: xpGain,
+      messageCount: 1,
+      lastXpAt: now,
+    })
+    .onConflictDoUpdate({
+      target: [userLevels.guildId, userLevels.userId],
+      set: {
+        xp: sql`${userLevels.xp} + ${xpGain}`,
         username,
-        messageCount: existing.messageCount + 1,
+        messageCount: sql`${userLevels.messageCount} + 1`,
         lastXpAt: now,
-      })
-      .where(
-        and(eq(userLevels.guildId, guildId), eq(userLevels.userId, userId)),
-      );
-    return UserLevel.from({
-      guildId,
-      userId,
-      username,
-      xp: newXp,
-      level: newLevel,
-      messageCount: existing.messageCount + 1,
-      lastXpAt: now,
-    });
-  } else {
-    const newLevel = levelFromXp(xpGain);
-    await db.insert(userLevels).values({
-      guildId,
-      userId,
-      username,
-      xp: xpGain,
-      level: newLevel,
-      messageCount: 1,
-      lastXpAt: now,
-    });
-    return UserLevel.from({
-      guildId,
-      userId,
-      username,
-      xp: xpGain,
-      level: newLevel,
-      messageCount: 1,
-      lastXpAt: now,
-    });
-  }
+      },
+    })
+    .returning();
+
+  const row = rows[0];
+  if (!row) throw new Error("upsertXp returned no rows");
+
+  return UserLevel.from(row);
 }
 
 export async function getRankPosition(
@@ -112,7 +90,6 @@ export async function bulkUpsertUserLevels(
         userId: row.userId,
         username: row.username,
         xp: row.xp,
-        level: computedLevel,
         messageCount: 0,
         lastXpAt: 0,
       })
@@ -121,7 +98,6 @@ export async function bulkUpsertUserLevels(
         set: {
           username: row.username,
           xp: row.xp,
-          level: computedLevel,
         },
         where: gt(sql`excluded.xp`, userLevels.xp),
       });
