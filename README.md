@@ -39,6 +39,12 @@ bun run start
 bun --hot src/index.ts
 ```
 
+Preview the rank card:
+
+```bash
+bun run rank-card:preview
+```
+
 Run tests:
 
 ```bash
