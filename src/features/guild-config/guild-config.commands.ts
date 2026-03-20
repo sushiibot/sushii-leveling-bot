@@ -1,10 +1,14 @@
 import {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
   type ChatInputCommandInteraction,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
 } from "discord.js";
-import { upsertBackgroundBlob, upsertLevelRole, deleteLevelRole } from "./guild-config.repo";
 import { invalidateBackgroundCache } from "../rank-card/rank-card.service";
+import {
+  deleteLevelRole,
+  upsertBackgroundBlob,
+  upsertLevelRole,
+} from "./guild-config.repo";
 
 const MAX_BACKGROUND_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -31,10 +35,7 @@ export const setLevelRoleCommand = new SlashCommandBuilder()
       .setMinValue(1),
   )
   .addRoleOption((opt) =>
-    opt
-      .setName("role")
-      .setDescription("Role to assign")
-      .setRequired(true),
+    opt.setName("role").setDescription("Role to assign").setRequired(true),
   );
 
 export const removeLevelRoleCommand = new SlashCommandBuilder()
@@ -75,7 +76,9 @@ export async function handleSetLevelBackground(
 
   const response = await fetch(attachment.url);
   if (!response.ok) {
-    await interaction.editReply("Failed to download the image. Please try again.");
+    await interaction.editReply(
+      "Failed to download the image. Please try again.",
+    );
     return;
   }
 

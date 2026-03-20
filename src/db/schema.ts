@@ -1,4 +1,10 @@
-import { sqliteTable, text, integer, blob, primaryKey } from "drizzle-orm/sqlite-core";
+import {
+  blob,
+  integer,
+  primaryKey,
+  sqliteTable,
+  text,
+} from "drizzle-orm/sqlite-core";
 
 export const guildConfigs = sqliteTable("guild_configs", {
   guildId: text("guild_id").primaryKey(),

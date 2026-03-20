@@ -1,11 +1,11 @@
 import {
-  SlashCommandBuilder,
-  type ChatInputCommandInteraction,
   AttachmentBuilder,
+  type ChatInputCommandInteraction,
+  SlashCommandBuilder,
 } from "discord.js";
-import { getUserLevel, getRankPosition } from "./leveling.repo";
 import { getGuildConfig } from "../guild-config/guild-config.service";
 import { renderRankCard } from "../rank-card/rank-card.service";
+import { getRankPosition, getUserLevel } from "./leveling.repo";
 import type { UserLevel } from "./leveling.types";
 
 export const levelCommand = new SlashCommandBuilder()
@@ -28,8 +28,7 @@ export async function handleLevel(
 
   await interaction.deferReply();
 
-  const targetUser =
-    interaction.options.getUser("user") ?? interaction.user;
+  const targetUser = interaction.options.getUser("user") ?? interaction.user;
   const guildId = interaction.guildId;
 
   let userLevel: UserLevel | undefined = await getUserLevel(
@@ -54,8 +53,17 @@ export async function handleLevel(
     getGuildConfig(guildId),
   ]);
 
-  const avatarUrl = targetUser.displayAvatarURL({ extension: "png", size: 256 });
-  const imageBuffer = await renderRankCard(guildId, userLevel, rank, avatarUrl, config.backgroundImage);
+  const avatarUrl = targetUser.displayAvatarURL({
+    extension: "png",
+    size: 256,
+  });
+  const imageBuffer = await renderRankCard(
+    guildId,
+    userLevel,
+    rank,
+    avatarUrl,
+    config.backgroundImage,
+  );
 
   const attachment = new AttachmentBuilder(imageBuffer, {
     name: "rank-card.png",

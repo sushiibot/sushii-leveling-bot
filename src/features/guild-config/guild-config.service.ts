@@ -1,5 +1,5 @@
-import { getGuildConfigRow } from "./guild-config.repo";
 import type { GuildConfig } from "../leveling/leveling.types";
+import { getGuildConfigRow } from "./guild-config.repo";
 
 const DEFAULTS = {
   xpMin: 15,

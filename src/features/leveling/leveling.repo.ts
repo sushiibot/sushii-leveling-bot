@@ -1,4 +1,4 @@
-import { eq, and, sql, gt } from "drizzle-orm";
+import { and, eq, gt, sql } from "drizzle-orm";
 import { db } from "../../db";
 import { userLevels } from "../../db/schema";
 import { UserLevel } from "./leveling.types";
@@ -43,6 +43,7 @@ export async function upsertXp(
       userId,
       username,
       xp: newXp,
+      level: newLevel,
       messageCount: existing.messageCount + 1,
       lastXpAt: now,
     });
@@ -62,6 +63,7 @@ export async function upsertXp(
       userId,
       username,
       xp: xpGain,
+      level: newLevel,
       messageCount: 1,
       lastXpAt: now,
     });

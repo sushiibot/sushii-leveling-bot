@@ -1,4 +1,7 @@
+import type { userLevels } from "../../db/schema";
 import { levelFromXp } from "./xp";
+
+export type UserLevelRow = typeof userLevels.$inferSelect;
 
 export class UserLevel {
   constructor(
@@ -14,14 +17,7 @@ export class UserLevel {
     return levelFromXp(this.xp);
   }
 
-  static from(row: {
-    guildId: string;
-    userId: string;
-    username: string;
-    xp: number;
-    messageCount: number;
-    lastXpAt: number;
-  }): UserLevel {
+  static from(row: UserLevelRow): UserLevel {
     return new UserLevel(
       row.guildId,
       row.userId,

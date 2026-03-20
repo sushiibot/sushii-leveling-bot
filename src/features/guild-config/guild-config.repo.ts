@@ -1,7 +1,7 @@
-import { eq, and } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { db } from "../../db";
 import { guildConfigs, levelRoles } from "../../db/schema";
-import type { GuildConfig, LevelRole } from "../leveling/leveling.types";
+import type { LevelRole } from "../leveling/leveling.types";
 
 export async function getGuildConfigRow(
   guildId: string,

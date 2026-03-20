@@ -41,7 +41,12 @@ export function parseCsv(text: string): CsvRow[] {
     const xpRaw = cols[xpIdx]?.trim();
     const levelRaw = cols[levelIdx]?.trim();
 
-    if (!platformId || !username || xpRaw === undefined || levelRaw === undefined) {
+    if (
+      !platformId ||
+      !username ||
+      xpRaw === undefined ||
+      levelRaw === undefined
+    ) {
       throw new Error(`Invalid row at line ${i + 1}: ${line}`);
     }
 

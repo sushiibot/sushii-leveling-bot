@@ -1,5 +1,5 @@
-import { parseCsv } from "./csv";
 import { bulkUpsertUserLevels } from "../leveling/leveling.repo";
+import { parseCsv } from "./csv";
 
 export interface ImportResult {
   total: number;

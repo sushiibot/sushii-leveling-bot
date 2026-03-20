@@ -1,7 +1,7 @@
 import {
-  SlashCommandBuilder,
-  PermissionFlagsBits,
   type ChatInputCommandInteraction,
+  PermissionFlagsBits,
+  SlashCommandBuilder,
 } from "discord.js";
 import { importFromCsv } from "./import.service";
 
@@ -12,7 +12,9 @@ export const importLevelsCommand = new SlashCommandBuilder()
   .addAttachmentOption((opt) =>
     opt
       .setName("file")
-      .setDescription("CSV file with columns: platformId, username, XP, currentLevel")
+      .setDescription(
+        "CSV file with columns: platformId, username, XP, currentLevel",
+      )
       .setRequired(true),
   );
 
@@ -29,11 +31,17 @@ export async function handleImportLevels(
   const attachment = interaction.options.getAttachment("file", true);
 
   try {
-    const { total, levelMismatches } = await importFromCsv(interaction.guildId, attachment.url);
-    const mismatchNote = levelMismatches > 0
-      ? ` (${levelMismatches} levels recomputed from XP — CSV values did not match)`
-      : " (all levels matched recomputed values)";
-    await interaction.editReply(`Successfully imported ${total} records.${mismatchNote}`);
+    const { total, levelMismatches } = await importFromCsv(
+      interaction.guildId,
+      attachment.url,
+    );
+    const mismatchNote =
+      levelMismatches > 0
+        ? ` (${levelMismatches} levels recomputed from XP — CSV values did not match)`
+        : " (all levels matched recomputed values)";
+    await interaction.editReply(
+      `Successfully imported ${total} records.${mismatchNote}`,
+    );
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     await interaction.editReply(`Import failed: ${message}`);

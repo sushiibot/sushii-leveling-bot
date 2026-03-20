@@ -1,13 +1,13 @@
-import {
-  createCanvas,
-  loadImage,
-  GlobalFonts,
-  type SKRSContext2D,
-} from "@napi-rs/canvas";
 import { join } from "node:path";
 import { fileURLToPath } from "node:url";
+import {
+  createCanvas,
+  GlobalFonts,
+  loadImage,
+  type SKRSContext2D,
+} from "@napi-rs/canvas";
 import type { UserLevel } from "../leveling/leveling.types";
-import { xpInCurrentLevel, xpForNextLevelUp } from "../leveling/xp";
+import { xpForNextLevelUp, xpInCurrentLevel } from "../leveling/xp";
 
 // ---------------------------------------------------------------------------
 // Font registration (runs once at module load)
@@ -16,8 +16,14 @@ const __dirname = fileURLToPath(new URL(".", import.meta.url));
 const FONTS_DIR = join(__dirname, "fonts");
 
 GlobalFonts.registerFromPath(join(FONTS_DIR, "Poppins-Regular.ttf"), "Poppins");
-GlobalFonts.registerFromPath(join(FONTS_DIR, "Poppins-SemiBold.ttf"), "Poppins SemiBold");
-GlobalFonts.registerFromPath(join(FONTS_DIR, "Poppins-Bold.ttf"), "Poppins Bold");
+GlobalFonts.registerFromPath(
+  join(FONTS_DIR, "Poppins-SemiBold.ttf"),
+  "Poppins SemiBold",
+);
+GlobalFonts.registerFromPath(
+  join(FONTS_DIR, "Poppins-Bold.ttf"),
+  "Poppins Bold",
+);
 
 // ---------------------------------------------------------------------------
 // Catppuccin Mocha palette
@@ -110,8 +116,20 @@ export async function renderRankCard(
   ctx.fillText(userLevel.username, CONTENT_X, 155);
 
   // --- Rank & Level (top right) ---
-  drawStatBlock(ctx, "LEVEL", String(userLevel.level), STATS_RIGHT - 160, MOCHA.yellow);
-  drawStatBlock(ctx, "RANK", rank != null ? `#${rank}` : "N/A", STATS_RIGHT, MOCHA.text);
+  drawStatBlock(
+    ctx,
+    "LEVEL",
+    String(userLevel.level),
+    STATS_RIGHT - 160,
+    MOCHA.yellow,
+  );
+  drawStatBlock(
+    ctx,
+    "RANK",
+    rank != null ? `#${rank}` : "N/A",
+    STATS_RIGHT,
+    MOCHA.text,
+  );
 
   // --- XP progress bar ---
   const currentXpInLevel = xpInCurrentLevel(userLevel.xp, userLevel.level);
@@ -176,7 +194,10 @@ async function drawBackground(
   ctx.restore();
 }
 
-async function drawAvatar(ctx: SKRSContext2D, avatarUrl: string): Promise<void> {
+async function drawAvatar(
+  ctx: SKRSContext2D,
+  avatarUrl: string,
+): Promise<void> {
   const cx = AVATAR_X + AVATAR_SIZE / 2;
   const cy = AVATAR_Y + AVATAR_SIZE / 2;
   const r = AVATAR_SIZE / 2;

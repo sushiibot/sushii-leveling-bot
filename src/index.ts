@@ -1,17 +1,29 @@
-import { Events, PermissionFlagsBits, REST, Routes, type Interaction } from "discord.js";
+import {
+  Events,
+  type Interaction,
+  PermissionFlagsBits,
+  REST,
+  Routes,
+} from "discord.js";
 import { createClient } from "./client";
 import { runMigrations } from "./db";
-import { registerLevelingEvents } from "./features/leveling/leveling.events";
-import { handleLevel, levelCommand } from "./features/leveling/leveling.commands";
 import {
+  handleRemoveLevelRole,
   handleSetLevelBackground,
   handleSetLevelRole,
-  handleRemoveLevelRole,
+  removeLevelRoleCommand,
   setLevelBackgroundCommand,
   setLevelRoleCommand,
-  removeLevelRoleCommand,
 } from "./features/guild-config/guild-config.commands";
-import { handleImportLevels, importLevelsCommand } from "./features/import/import.commands";
+import {
+  handleImportLevels,
+  importLevelsCommand,
+} from "./features/import/import.commands";
+import {
+  handleLevel,
+  levelCommand,
+} from "./features/leveling/leveling.commands";
+import { registerLevelingEvents } from "./features/leveling/leveling.events";
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
@@ -83,7 +95,9 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     if (interaction.replied || interaction.deferred) {
       await interaction.editReply(msg).catch(console.error);
     } else {
-      await interaction.reply({ content: msg, ephemeral: true }).catch(console.error);
+      await interaction
+        .reply({ content: msg, ephemeral: true })
+        .catch(console.error);
     }
   }
 });

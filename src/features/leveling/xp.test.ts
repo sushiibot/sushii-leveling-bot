@@ -14,10 +14,14 @@ describe("xpToNextLevel", () => {
   test("level 3 requires 100 XP", () => expect(xpToNextLevel(3)).toBe(100));
   test("level 4 requires 140 XP", () => expect(xpToNextLevel(4)).toBe(140));
   // Linear formula 40n - 20 kicks in at n >= 5
-  test("level 5 requires 180 XP (40*5-20)", () => expect(xpToNextLevel(5)).toBe(180));
-  test("level 6 requires 220 XP (40*6-20)", () => expect(xpToNextLevel(6)).toBe(220));
-  test("level 10 requires 380 XP (40*10-20)", () => expect(xpToNextLevel(10)).toBe(380));
-  test("level 50 requires 1980 XP (40*50-20)", () => expect(xpToNextLevel(50)).toBe(1980));
+  test("level 5 requires 180 XP (40*5-20)", () =>
+    expect(xpToNextLevel(5)).toBe(180));
+  test("level 6 requires 220 XP (40*6-20)", () =>
+    expect(xpToNextLevel(6)).toBe(220));
+  test("level 10 requires 380 XP (40*10-20)", () =>
+    expect(xpToNextLevel(10)).toBe(380));
+  test("level 50 requires 1980 XP (40*50-20)", () =>
+    expect(xpToNextLevel(50)).toBe(1980));
 });
 
 describe("totalXpForLevel", () => {
@@ -70,12 +74,9 @@ describe("levelFromXp", () => {
     [25419, 36],
     [36447, 43],
     [54195, 53],
-  ] as [number, number][])(
-    "levelFromXp(%i) = %i",
-    (xp, expectedLevel) => {
-      expect(levelFromXp(xp)).toBe(expectedLevel);
-    },
-  );
+  ] as [number, number][])("levelFromXp(%i) = %i", (xp, expectedLevel) => {
+    expect(levelFromXp(xp)).toBe(expectedLevel);
+  });
 });
 
 describe("xpInCurrentLevel", () => {

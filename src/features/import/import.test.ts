@@ -4,8 +4,8 @@ process.env.DATABASE_URL = ":memory:";
 import { beforeAll, describe, expect, test } from "bun:test";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { parseCsv } from "./csv";
 import { levelFromXp } from "../leveling/xp";
+import { parseCsv } from "./csv";
 
 // Dynamic imports so the in-memory DATABASE_URL is used
 const { bulkUpsertUserLevels, getRankPosition } = await import(

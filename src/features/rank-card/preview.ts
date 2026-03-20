@@ -5,8 +5,8 @@
  *   bun src/features/rank-card/preview.ts [--port 3000]
  */
 
-import { renderRankCard } from "./rank-card.service";
 import { totalXpForLevel, xpToNextLevel } from "../leveling/xp";
+import { renderRankCard } from "./rank-card.service";
 
 function arg(name: string): string | undefined {
   const idx = process.argv.indexOf(`--${name}`);
@@ -20,17 +20,26 @@ const port = parseInt(arg("port") ?? "3000", 10);
 // avatar and background can be any URL (including data: URLs)
 // ---------------------------------------------------------------------------
 async function handleRender(url: URL): Promise<Response> {
-  const username   = url.searchParams.get("username") ?? "preview";
-  const level      = Math.max(0, parseInt(url.searchParams.get("level") ?? "10", 10));
-  const progress   = Math.max(0, Math.min(1, parseFloat(url.searchParams.get("progress") ?? "0.5")));
-  const rankParam  = url.searchParams.get("rank");
-  const rank       = rankParam === "" || rankParam === null ? null : parseInt(rankParam, 10);
-  const avatarUrl  = url.searchParams.get("avatar") ?? "https://cdn.discordapp.com/embed/avatars/0.png";
-  const bgParam    = url.searchParams.get("background") ?? "";
+  const username = url.searchParams.get("username") ?? "preview";
+  const level = Math.max(
+    0,
+    parseInt(url.searchParams.get("level") ?? "10", 10),
+  );
+  const progress = Math.max(
+    0,
+    Math.min(1, parseFloat(url.searchParams.get("progress") ?? "0.5")),
+  );
+  const rankParam = url.searchParams.get("rank");
+  const rank =
+    rankParam === "" || rankParam === null ? null : parseInt(rankParam, 10);
+  const avatarUrl =
+    url.searchParams.get("avatar") ??
+    "https://cdn.discordapp.com/embed/avatars/0.png";
+  const bgParam = url.searchParams.get("background") ?? "";
 
-  const base    = totalXpForLevel(level);
-  const needed  = xpToNextLevel(level);
-  const xp      = base + Math.floor(needed * progress);
+  const base = totalXpForLevel(level);
+  const needed = xpToNextLevel(level);
+  const xp = base + Math.floor(needed * progress);
 
   // Decode background data URL → Buffer if provided
   let background: Buffer | null = null;
@@ -47,12 +56,22 @@ async function handleRender(url: URL): Promise<Response> {
   try {
     const buf = await renderRankCard(
       "preview",
-      { userId: "preview", guildId: "preview", username, xp, level, messageCount: 0, lastXpAt: 0 },
+      {
+        userId: "preview",
+        guildId: "preview",
+        username,
+        xp,
+        level,
+        messageCount: 0,
+        lastXpAt: 0,
+      },
       isNaN(rank as number) ? null : rank,
       avatarUrl,
       background,
     );
-    return new Response(buf, { headers: { "Content-Type": "image/png", "Cache-Control": "no-store" } });
+    return new Response(buf, {
+      headers: { "Content-Type": "image/png", "Cache-Control": "no-store" },
+    });
   } catch (err) {
     console.error("Render error:", err);
     return new Response("Render failed: " + String(err), { status: 500 });
@@ -62,7 +81,7 @@ async function handleRender(url: URL): Promise<Response> {
 // ---------------------------------------------------------------------------
 // HTML UI
 // ---------------------------------------------------------------------------
-const HTML = /* html */`<!DOCTYPE html>
+const HTML = /* html */ `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
