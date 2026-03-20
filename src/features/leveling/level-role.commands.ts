@@ -1,11 +1,14 @@
 import {
   type ChatInputCommandInteraction,
+  ComponentType,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
+  roleMention,
 } from "discord.js";
 import {
   deleteLevelRole,
+  getLevelRoles,
   upsertLevelRole,
 } from "../guild-config/guild-config.repo";
 
@@ -54,6 +57,9 @@ export const levelRoleCommand = new SlashCommandBuilder()
           .setRequired(true)
           .setMinValue(1),
       ),
+  )
+  .addSubcommand((sub) =>
+    sub.setName("list").setDescription("List all level role rewards"),
   );
 
 export async function handleLevelRole(
@@ -73,6 +79,8 @@ export async function handleLevelRole(
     await handleLevelRoleUpsert(interaction);
   } else if (sub === "delete") {
     await handleLevelRoleDelete(interaction);
+  } else if (sub === "list") {
+    await handleLevelRoleList(interaction);
   }
 }
 
@@ -111,4 +119,39 @@ async function handleLevelRoleDelete(
       `Role reward for level ${level} has been removed.`,
     );
   }
+}
+
+async function handleLevelRoleList(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  await interaction.deferReply();
+
+  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
+  const roles = await getLevelRoles(interaction.guildId!);
+
+  let content: string;
+  if (roles.length === 0) {
+    content = "No level role rewards have been configured.";
+  } else {
+    const lines = roles
+      .sort((a, b) => a.level - b.level)
+      .map((r) => `Level ${r.level}: ${roleMention(r.roleId)}`);
+    content = `## Level Role Rewards\n\n${lines.join("\n")}`;
+  }
+
+  await interaction.editReply({
+    allowedMentions: { parse: [] },
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      {
+        type: ComponentType.Container,
+        components: [
+          {
+            type: ComponentType.TextDisplay,
+            content,
+          },
+        ],
+      },
+    ],
+  });
 }
