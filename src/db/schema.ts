@@ -21,10 +21,9 @@ export const userLevels = sqliteTable(
   {
     guildId: text("guild_id").notNull(),
     userId: text("user_id").notNull(),
-    username: text("username").notNull().default(""),
     xp: integer("xp").notNull().default(0),
     messageCount: integer("message_count").notNull().default(0),
-    lastXpAt: integer("last_xp_at").notNull().default(0),
+    lastXpAt: integer("last_xp_at", { mode: "timestamp" }).notNull().default(new Date(0)),
   },
   (t) => [primaryKey({ columns: [t.guildId, t.userId] })],
 );

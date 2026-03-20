@@ -20,12 +20,7 @@ export async function importFromCsv(
 
   const result = await bulkUpsertUserLevels(
     guildId,
-    rows.map((r) => ({
-      userId: r.platformId,
-      username: r.username,
-      xp: r.xp,
-      level: r.level,
-    })),
+    rows.map((r) => ({ userId: r.platformId, xp: r.xp, level: r.level })),
   );
 
   return result;

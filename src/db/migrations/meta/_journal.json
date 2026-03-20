@@ -22,6 +22,13 @@
       "when": 1774041387736,
       "tag": "0002_adorable_golden_guardian",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1774046232813,
+      "tag": "0003_overrated_shadowcat",
+      "breakpoints": true
     }
   ]
 }

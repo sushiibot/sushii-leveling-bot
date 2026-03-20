@@ -7,10 +7,9 @@ export class UserLevel {
   constructor(
     public readonly guildId: string,
     public readonly userId: string,
-    public readonly username: string,
     public readonly xp: number,
     public readonly messageCount: number,
-    public readonly lastXpAt: number,
+    public readonly lastXpAt: Date,
   ) {}
 
   get level(): number {
@@ -21,7 +20,6 @@ export class UserLevel {
     return new UserLevel(
       row.guildId,
       row.userId,
-      row.username,
       row.xp,
       row.messageCount,
       row.lastXpAt,

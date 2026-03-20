@@ -6,11 +6,6 @@ export function registerLevelingEvents(client: Client): void {
     if (message.author.bot) return;
     if (!message.guildId || !message.guild) return;
 
-    await grantXp(
-      message.guildId,
-      message.author.id,
-      message.author.username,
-      message.guild,
-    );
+    await grantXp(message.guildId, message.author.id, message.guild);
   });
 }

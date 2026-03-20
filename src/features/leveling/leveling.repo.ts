@@ -17,16 +17,14 @@ export async function getUserLevel(
 export async function upsertXp(
   guildId: string,
   userId: string,
-  username: string,
   xpGain: number,
-  now: number,
+  now: Date,
 ): Promise<UserLevel> {
   const rows = await db
     .insert(userLevels)
     .values({
       guildId,
       userId,
-      username,
       xp: xpGain,
       messageCount: 1,
       lastXpAt: now,
@@ -35,7 +33,6 @@ export async function upsertXp(
       target: [userLevels.guildId, userLevels.userId],
       set: {
         xp: sql`${userLevels.xp} + ${xpGain}`,
-        username,
         messageCount: sql`${userLevels.messageCount} + 1`,
         lastXpAt: now,
       },
@@ -83,7 +80,7 @@ export interface BulkUpsertResult {
 
 export async function bulkUpsertUserLevels(
   guildId: string,
-  rows: Array<{ userId: string; username: string; xp: number; level: number }>,
+  rows: Array<{ userId: string; xp: number; level: number }>,
 ): Promise<BulkUpsertResult> {
   if (rows.length === 0) return { total: 0, levelMismatches: 0 };
 
@@ -100,17 +97,13 @@ export async function bulkUpsertUserLevels(
       .values({
         guildId,
         userId: row.userId,
-        username: row.username,
         xp: row.xp,
         messageCount: 0,
-        lastXpAt: 0,
+        lastXpAt: new Date(0),
       })
       .onConflictDoUpdate({
         target: [userLevels.guildId, userLevels.userId],
-        set: {
-          username: row.username,
-          xp: row.xp,
-        },
+        set: { xp: row.xp },
         where: gt(sql`excluded.xp`, userLevels.xp),
       });
   }

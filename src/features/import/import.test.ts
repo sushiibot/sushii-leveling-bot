@@ -84,12 +84,7 @@ describe("import + rank calculation", () => {
   beforeAll(async () => {
     await bulkUpsertUserLevels(
       GUILD_ID,
-      rows.map((r) => ({
-        userId: r.platformId,
-        username: r.username,
-        xp: r.xp,
-        level: r.level,
-      })),
+      rows.map((r) => ({ userId: r.platformId, xp: r.xp, level: r.level })),
     );
   });
 

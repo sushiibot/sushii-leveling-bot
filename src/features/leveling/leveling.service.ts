@@ -10,7 +10,6 @@ const cooldowns = new Map<string, number>();
 export async function grantXp(
   guildId: string,
   userId: string,
-  username: string,
   guild: Guild,
 ): Promise<void> {
   const config = await getGuildConfig(guildId);
@@ -33,8 +32,7 @@ export async function grantXp(
   const existing = await getUserLevel(guildId, userId);
   const previousLevel = existing?.level ?? 0;
 
-  const nowSec = Math.floor(now / 1000);
-  const updated = await upsertXp(guildId, userId, username, xpGain, nowSec);
+  const updated = await upsertXp(guildId, userId, xpGain, new Date(now));
 
   if (updated.level > previousLevel) {
     await handleLevelUp(guildId, userId, updated.level, guild);
