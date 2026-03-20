@@ -1,5 +1,6 @@
 import {
   type ChatInputCommandInteraction,
+  MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
@@ -22,11 +23,11 @@ export async function handleImportLevels(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   if (!interaction.guildId) {
-    await interaction.reply({ content: "Server only.", ephemeral: true });
+    await interaction.reply({ content: "Server only.", flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const attachment = interaction.options.getAttachment("file", true);
 

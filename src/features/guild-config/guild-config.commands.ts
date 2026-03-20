@@ -1,5 +1,6 @@
 import {
   type ChatInputCommandInteraction,
+  MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
 } from "discord.js";
@@ -54,11 +55,11 @@ export async function handleSetLevelBackground(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   if (!interaction.guildId) {
-    await interaction.reply({ content: "Server only.", ephemeral: true });
+    await interaction.reply({ content: "Server only.", flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const attachment = interaction.options.getAttachment("image", true);
 
@@ -95,11 +96,11 @@ export async function handleSetLevelRole(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   if (!interaction.guildId) {
-    await interaction.reply({ content: "Server only.", ephemeral: true });
+    await interaction.reply({ content: "Server only.", flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const level = interaction.options.getInteger("level", true);
   const role = interaction.options.getRole("role", true);
@@ -115,11 +116,11 @@ export async function handleRemoveLevelRole(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
   if (!interaction.guildId) {
-    await interaction.reply({ content: "Server only.", ephemeral: true });
+    await interaction.reply({ content: "Server only.", flags: MessageFlags.Ephemeral });
     return;
   }
 
-  await interaction.deferReply({ ephemeral: true });
+  await interaction.deferReply({ flags: MessageFlags.Ephemeral });
 
   const level = interaction.options.getInteger("level", true);
   const deleted = await deleteLevelRole(interaction.guildId, level);

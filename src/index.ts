@@ -1,6 +1,7 @@
 import {
   Events,
   type Interaction,
+  MessageFlags,
   PermissionFlagsBits,
   REST,
   Routes,
@@ -96,7 +97,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
       await interaction.editReply(msg).catch(console.error);
     } else {
       await interaction
-        .reply({ content: msg, ephemeral: true })
+        .reply({ content: msg, flags: MessageFlags.Ephemeral })
         .catch(console.error);
     }
   }

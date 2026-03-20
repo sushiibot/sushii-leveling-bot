@@ -1,6 +1,7 @@
 import {
   AttachmentBuilder,
   type ChatInputCommandInteraction,
+  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { getGuildConfig } from "../guild-config/guild-config.service";
@@ -21,7 +22,7 @@ export async function handleLevel(
   if (!interaction.guildId) {
     await interaction.reply({
       content: "This command can only be used in a server.",
-      ephemeral: true,
+      flags: MessageFlags.Ephemeral,
     });
     return;
   }
