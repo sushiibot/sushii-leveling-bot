@@ -7,7 +7,7 @@ import {
 import { getGuildConfig } from "../guild-config/guild-config.service";
 import { renderRankCard } from "../rank-card/rank-card.service";
 import { getRankPosition, getUserLevel } from "./leveling.repo";
-import type { UserLevel } from "./leveling.types";
+import { UserLevel } from "./leveling.types";
 
 export const levelCommand = new SlashCommandBuilder()
   .setName("level")
@@ -38,15 +38,7 @@ export async function handleLevel(
   );
 
   if (!userLevel) {
-    userLevel = {
-      guildId,
-      userId: targetUser.id,
-      username: targetUser.username,
-      xp: 0,
-      level: 0,
-      messageCount: 0,
-      lastXpAt: 0,
-    };
+    userLevel = new UserLevel(guildId, targetUser.id, 0, 0, new Date(0));
   }
 
   const [rank, config] = await Promise.all([
@@ -65,6 +57,7 @@ export async function handleLevel(
     avatarUrl,
     config.backgroundImage,
     config.themeColor,
+    targetUser.displayName,
   );
 
   const attachment = new AttachmentBuilder(imageBuffer, {

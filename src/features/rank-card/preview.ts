@@ -6,6 +6,7 @@
  */
 
 import logger from "../../logger";
+import { UserLevel } from "../leveling/leveling.types";
 import { totalXpForLevel, xpToNextLevel } from "../leveling/xp";
 import { renderRankCard } from "./rank-card.service";
 
@@ -57,18 +58,12 @@ async function handleRender(url: URL): Promise<Response> {
   try {
     const buf = await renderRankCard(
       "preview",
-      {
-        userId: "preview",
-        guildId: "preview",
-        username,
-        xp,
-        level,
-        messageCount: 0,
-        lastXpAt: 0,
-      },
+      new UserLevel("preview", "preview", xp, 0, new Date(0)),
       Number.isNaN(rank as number) ? null : rank,
       avatarUrl,
       background,
+      "yellow",
+      username,
     );
     return new Response(buf, {
       headers: { "Content-Type": "image/png", "Cache-Control": "no-store" },

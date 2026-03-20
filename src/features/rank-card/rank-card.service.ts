@@ -126,6 +126,7 @@ export async function renderRankCard(
   avatarUrl: string,
   backgroundImage: Buffer | null,
   themeColor = "yellow",
+  username: string,
 ): Promise<Buffer> {
   const accent = resolveAccentColor(themeColor);
   const canvas = createCanvas(CARD_WIDTH, CARD_HEIGHT);
@@ -148,7 +149,7 @@ export async function renderRankCard(
   ctx.font = `600 38px "Poppins SemiBold", Poppins, sans-serif`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(userLevel.username, CONTENT_X, 155);
+  ctx.fillText(username, CONTENT_X, 155);
 
   // --- Rank & Level (top right) ---
   drawStatBlock(
