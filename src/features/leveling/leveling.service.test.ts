@@ -1,15 +1,13 @@
 // Must be set before any DB modules are imported
 process.env.DATABASE_URL = ":memory:";
 
-import { afterEach, describe, expect, mock, spyOn, test } from "bun:test";
+import { describe, expect, mock, spyOn, test } from "bun:test";
 import type { Guild } from "discord.js";
 
 // Dynamic imports so the in-memory DATABASE_URL is used
 const { grantXp } = await import("./leveling.service");
 const { getUserLevel, upsertXp } = await import("./leveling.repo");
-const { upsertLevelRole } = await import(
-  "../guild-config/guild-config.repo"
-);
+const { upsertLevelRole } = await import("../guild-config/guild-config.repo");
 const { runMigrations } = await import("../../db");
 
 runMigrations();
@@ -72,7 +70,9 @@ describe("grantXp", () => {
     await grantXp(guildId, userId, guild);
 
     // guild.members.fetch should have been called once for this user.
-    expect((guild.members.fetch as ReturnType<typeof mock>).mock.calls).toHaveLength(1);
+    expect(
+      (guild.members.fetch as ReturnType<typeof mock>).mock.calls,
+    ).toHaveLength(1);
     // roles.add should have received the configured role ID.
     expect(roleAdd).toHaveBeenCalledWith(roleId);
   });
