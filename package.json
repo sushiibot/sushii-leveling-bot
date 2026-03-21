@@ -1,5 +1,5 @@
 {
-  "name": "sushii-lisa",
+  "name": "sushii-leveling-bot",
   "module": "src/index.ts",
   "type": "module",
   "private": true,

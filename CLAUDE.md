@@ -1,106 +1,82 @@
+# CLAUDE.md
 
-Default to using Bun instead of Node.js.
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-- Use `bun <file>` instead of `node <file>` or `ts-node <file>`
-- Use `bun test` instead of `jest` or `vitest`
-- Use `bun build <file.html|file.ts|file.css>` instead of `webpack` or `esbuild`
-- Use `bun install` instead of `npm install` or `yarn install` or `pnpm install`
-- Use `bun run <script>` instead of `npm run <script>` or `yarn run <script>` or `pnpm run <script>`
-- Bun automatically loads .env, so don't use dotenv.
+## Project Overview
 
-## APIs
+**sushii-leveling-bot** is a Discord XP leveling bot written in TypeScript. It grants XP on messages, renders rank card images, manages level-based role rewards, and supports per-guild configuration. MEE6 data import via CSV is also supported.
 
-- `Bun.serve()` supports WebSockets, HTTPS, and routes. Don't use `express`.
-- `bun:sqlite` for SQLite. Don't use `better-sqlite3`.
-- `Bun.redis` for Redis. Don't use `ioredis`.
-- `Bun.sql` for Postgres. Don't use `pg` or `postgres.js`.
-- `WebSocket` is built-in. Don't use `ws`.
-- Prefer `Bun.file` over `node:fs`'s readFile/writeFile
-- Bun.$`ls` instead of execa.
+## Commands
 
-## Testing
+```bash
+bun run dev                 # Run bot with pino-pretty logging
+bun run start               # Run bot (production)
+bun run rank-card:preview   # Hot-reload rank card preview
 
-Use `bun test` to run tests.
+bun test                    # Run all tests
+bun test src/features/leveling/xp.test.ts  # Run a single test file
 
-```ts#index.test.ts
-import { test, expect } from "bun:test";
+bun run typecheck           # Type-check without emit
+bun run lint --write        # Lint + auto-fix with Biome
+bun run check               # Lint check only (no fixes)
+bun run format --write      # Format with Biome
 
-test("hello world", () => {
-  expect(1).toBe(1);
-});
+bun run db:generate         # Generate migrations from schema changes
+bun run db:migrate          # Apply pending migrations
 ```
 
-## Frontend
+Pre-commit hook runs `biome check --write` automatically via lefthook.
 
-Use HTML imports with `Bun.serve()`. Don't use `vite`. HTML imports fully support React, CSS, Tailwind.
+## Environment Variables
 
-Server:
-
-```ts#index.ts
-import index from "./index.html"
-
-Bun.serve({
-  routes: {
-    "/": index,
-    "/api/users/:id": {
-      GET: (req) => {
-        return new Response(JSON.stringify({ id: req.params.id }));
-      },
-    },
-  },
-  // optional websocket support
-  websocket: {
-    open: (ws) => {
-      ws.send("Hello, world!");
-    },
-    message: (ws, message) => {
-      ws.send(message);
-    },
-    close: (ws) => {
-      // handle close
-    }
-  },
-  development: {
-    hmr: true,
-    console: true,
-  }
-})
+```
+DISCORD_TOKEN   # Required: bot token from Discord Developer Portal
+CLIENT_ID       # Required: application/client ID
+DATABASE_URL    # Optional: SQLite path (default: ./data/bot.db)
 ```
 
-HTML files can import .tsx, .jsx or .js files directly and Bun's bundler will transpile & bundle automatically. `<link>` tags can point to stylesheets and Bun's CSS bundler will bundle.
+## Architecture
 
-```html#index.html
-<html>
-  <body>
-    <h1>Hello, world!</h1>
-    <script type="module" src="./frontend.tsx"></script>
-  </body>
-</html>
-```
+### Layered Structure
 
-With the following `frontend.tsx`:
+Each feature follows: **Commands → Service → Repository → DB**
 
-```tsx#frontend.tsx
-import React from "react";
+- **Commands** (`*.commands.ts`) — SlashCommandBuilder definitions and interaction handlers
+- **Service** (`*.service.ts`) — Business logic (XP grants, cooldowns, level-up handling)
+- **Repository** (`*.repo.ts`) — Drizzle ORM queries
+- **Types** (`*.types.ts`) — Shared types and class wrappers
 
-// import .css files directly and it works
-import './index.css';
+### Startup Flow
 
-import { createRoot } from "react-dom/client";
+`src/index.ts` validates env vars → runs DB migrations → creates Discord client → registers event handlers → logs in.
 
-const root = createRoot(document.body);
+Interaction routing is a switch-case in `src/interactions.ts`. Commands handled: `/level`, `/leaderboard`, `/settings`, `/level-role`.
 
-export default function Frontend() {
-  return <h1>Hello, world!</h1>;
-}
+### Database (Drizzle ORM + SQLite)
 
-root.render(<Frontend />);
-```
+Schema defined in `src/db/schema.ts`. Three tables:
+- `guild_configs` — per-guild settings (XP range, cooldown, theme, background image)
+- `user_levels` — composite PK `(guildId, userId)`, stores XP and message count
+- `level_roles` — composite PK `(guildId, level)`, maps level thresholds to Discord roles
 
-Then, run index.ts
+All user data is guild-scoped (multi-tenant).
 
-```sh
-bun --hot ./index.ts
-```
+### XP / Level Formula
 
-For more information, read the Bun API docs in `node_modules/bun-types/docs/**.md`.
+Defined in `src/features/leveling/xp.ts`:
+- Levels 0–4: hardcoded XP values
+- Level 5+: `40n - 20` XP required per level (bigint arithmetic)
+
+### Key Patterns
+
+- **In-memory cooldowns** — `Map<string, number>` in `leveling.service.ts` prevents concurrent XP grants
+- **Atomic upserts** — `upsertXp()` uses SQL expressions to increment counters without races
+- **Deferred replies** — rank card generation defers Discord reply during canvas rendering
+- **UserLevel class** — wraps DB row with a computed `level` getter from XP
+
+## Bun Conventions
+
+- Use `bun:sqlite` not `better-sqlite3`
+- Use `Bun.file` not `node:fs` readFile/writeFile
+- Bun auto-loads `.env` — no dotenv needed
+- Tests use `bun:test` (`import { test, expect } from "bun:test"`)
