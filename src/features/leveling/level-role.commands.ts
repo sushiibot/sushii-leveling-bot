@@ -201,7 +201,7 @@ export async function handleLevelRoleImportSubmit(
     return;
   }
 
-  await interaction.deferReply();
+  await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
 
   const raw = interaction.fields.getTextInputValue("roles");
 
@@ -260,6 +260,7 @@ export async function handleLevelRoleImportSubmit(
 
   await interaction.editReply({
     allowedMentions: { parse: [] },
+    flags: MessageFlags.IsComponentsV2,
     components: [container(summary)],
   });
 }
