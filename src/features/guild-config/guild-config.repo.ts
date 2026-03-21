@@ -62,13 +62,13 @@ export async function upsertLevelRole(
 export async function deleteLevelRole(
   guildId: string,
   level: number,
-): Promise<number> {
+): Promise<LevelRole | undefined> {
   const existing = await getLevelRole(guildId, level);
-  if (!existing) return 0;
+  if (!existing) return undefined;
   await db
     .delete(levelRoles)
     .where(and(eq(levelRoles.guildId, guildId), eq(levelRoles.level, level)));
-  return 1;
+  return existing;
 }
 
 export async function getLevelRole(

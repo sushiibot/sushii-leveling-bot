@@ -6,12 +6,35 @@ import {
 } from "discord.js";
 import { handleSettings } from "./features/guild-config/settings.commands";
 import { handleLeaderboard } from "./features/leveling/leaderboard.commands";
-import { handleLevelRole } from "./features/leveling/level-role.commands";
+import {
+  LEVEL_ROLE_IMPORT_MODAL_ID,
+  handleLevelRole,
+  handleLevelRoleAutocomplete,
+  handleLevelRoleImportSubmit,
+} from "./features/leveling/level-role.commands";
 import { handleLevel } from "./features/leveling/leveling.commands";
 import logger from "./logger";
 
 export function registerInteractions(client: Client): void {
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+    if (interaction.isModalSubmit()) {
+      if (interaction.customId === LEVEL_ROLE_IMPORT_MODAL_ID) {
+        await handleLevelRoleImportSubmit(interaction).catch((e) =>
+          logger.error(e, "Error handling level-role import modal"),
+        );
+      }
+      return;
+    }
+
+    if (interaction.isAutocomplete()) {
+      if (interaction.commandName === "level-role") {
+        await handleLevelRoleAutocomplete(interaction).catch((e) =>
+          logger.error(e, "Error handling autocomplete"),
+        );
+      }
+      return;
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     logger.info(
