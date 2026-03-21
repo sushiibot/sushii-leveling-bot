@@ -2,30 +2,26 @@
  * XP required to go from level n to n+1.
  *
  * Derived empirically from MEE6 export data for this server.
- * For n < 5 the requirements are hardcoded from clean level boundaries;
- * for n >= 5 the formula is linear: 40n - 20.
+ * For n >= 5 the formula is linear: 40n - 20.
+ * For n < 3 the values are hardcoded from the observed data. n=2 (65 XP)
+ * deviates from the formula (60 XP) — confirmed against real MEE6 export data.
  *
- * Closed-form total XP for n >= 5: totalXpForLevel(n) = 20n² - 40n + 55
+ * Closed-form total XP for n >= 3: totalXpForLevel(n) = 20n² - 40n + 55
  */
 export function xpToNextLevel(n: number): number {
   if (n === 0) return 10;
   if (n === 1) return 40;
   if (n === 2) return 65;
-  if (n === 3) return 100;
-  if (n === 4) return 140;
   return 40 * n - 20;
 }
 
 /** Total XP required to reach level n (sum from 0 to n-1) */
 export function totalXpForLevel(n: number): number {
   if (n <= 0) return 0;
-  // Closed-form for n >= 5: derived from summing the linear series
-  if (n >= 5) return 20 * n * n - 40 * n + 55;
-  let total = 0;
-  for (let k = 0; k < n; k++) {
-    total += xpToNextLevel(k);
-  }
-  return total;
+  if (n === 1) return 10;
+  if (n === 2) return 50;
+  // Closed-form for n >= 3: derived from summing the linear series
+  return 20 * n * n - 40 * n + 55;
 }
 
 /** Derive the current level from total XP */

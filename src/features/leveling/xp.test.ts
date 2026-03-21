@@ -10,10 +10,13 @@ import {
 describe("xpToNextLevel", () => {
   test("level 0 requires 10 XP", () => expect(xpToNextLevel(0)).toBe(10));
   test("level 1 requires 40 XP", () => expect(xpToNextLevel(1)).toBe(40));
-  test("level 2 requires 65 XP", () => expect(xpToNextLevel(2)).toBe(65));
-  test("level 3 requires 100 XP", () => expect(xpToNextLevel(3)).toBe(100));
-  test("level 4 requires 140 XP", () => expect(xpToNextLevel(4)).toBe(140));
-  // Linear formula 40n - 20 kicks in at n >= 5
+  test("level 2 requires 65 XP (MEE6 data, not formula)", () =>
+    expect(xpToNextLevel(2)).toBe(65));
+  test("level 3 requires 100 XP (40*3-20)", () =>
+    expect(xpToNextLevel(3)).toBe(100));
+  test("level 4 requires 140 XP (40*4-20)", () =>
+    expect(xpToNextLevel(4)).toBe(140));
+  // Linear formula 40n - 20 kicks in at n >= 3
   test("level 5 requires 180 XP (40*5-20)", () =>
     expect(xpToNextLevel(5)).toBe(180));
   test("level 6 requires 220 XP (40*6-20)", () =>
