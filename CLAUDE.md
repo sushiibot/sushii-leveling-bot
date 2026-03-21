@@ -25,7 +25,17 @@ bun run db:generate         # Generate migrations from schema changes
 bun run db:migrate          # Apply pending migrations
 ```
 
-Pre-commit hook runs `biome check --write` automatically via lefthook.
+Pre-commit hook runs `biome check --write` and `typecheck` automatically via lefthook.
+
+## After Every Task
+
+Always run these before considering a task done:
+
+```bash
+bun run typecheck   # must pass with zero errors
+bun run check       # must pass with zero errors/warnings
+bun test            # must pass with zero failures
+```
 
 ## Environment Variables
 
