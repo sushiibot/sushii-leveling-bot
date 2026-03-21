@@ -1,6 +1,7 @@
 import {
   type ChatInputCommandInteraction,
   ContainerBuilder,
+  InteractionContextType,
   MessageFlags,
   PermissionFlagsBits,
   SlashCommandBuilder,
@@ -25,6 +26,7 @@ export const settingsCommand = new SlashCommandBuilder()
   .setName("settings")
   .setDescription("Configure server settings")
   .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild)
+  .setContexts(InteractionContextType.Guild)
   .addSubcommand((sub) =>
     sub
       .setName("background")
@@ -117,7 +119,9 @@ async function handleSettingsBackground(
   if (!response.ok) {
     await interaction.editReply({
       flags: MessageFlags.IsComponentsV2,
-      components: [container("Failed to download the image. Please try again.")],
+      components: [
+        container("Failed to download the image. Please try again."),
+      ],
     });
     return;
   }
@@ -133,7 +137,9 @@ async function handleSettingsBackground(
   await interaction.editReply({
     flags: MessageFlags.IsComponentsV2,
     components: [
-      container("## Settings: Background\n\nBackground image updated successfully!"),
+      container(
+        "## Settings: Background\n\nBackground image updated successfully!",
+      ),
     ],
   });
 }
@@ -141,14 +147,12 @@ async function handleSettingsBackground(
 async function handleSettingsColor(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply();
-
   const color = interaction.options.getString("color", true);
 
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
   await upsertThemeColor(interaction.guildId!, color);
 
-  await interaction.editReply({
+  await interaction.reply({
     flags: MessageFlags.IsComponentsV2,
     components: [
       container(`## Settings: Theme Color\n\nTheme color set to **${color}**.`),

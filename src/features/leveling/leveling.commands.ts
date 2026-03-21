@@ -1,6 +1,7 @@
 import {
   AttachmentBuilder,
   type ChatInputCommandInteraction,
+  InteractionContextType,
   MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
@@ -12,6 +13,7 @@ import { UserLevel } from "./leveling.types";
 export const levelCommand = new SlashCommandBuilder()
   .setName("level")
   .setDescription("Show your or another user's rank card")
+  .setContexts(InteractionContextType.Guild)
   .addUserOption((opt) =>
     opt.setName("user").setDescription("User to check").setRequired(false),
   );

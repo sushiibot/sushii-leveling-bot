@@ -1,6 +1,7 @@
 import {
   type ChatInputCommandInteraction,
   ContainerBuilder,
+  InteractionContextType,
   MessageFlags,
   SlashCommandBuilder,
   TextDisplayBuilder,
@@ -15,7 +16,8 @@ function container(content: string) {
 
 export const leaderboardCommand = new SlashCommandBuilder()
   .setName("leaderboard")
-  .setDescription("Show the top 10 users by XP");
+  .setDescription("Show the top 10 users by XP")
+  .setContexts(InteractionContextType.Guild);
 
 export async function handleLeaderboard(
   interaction: ChatInputCommandInteraction,
@@ -48,7 +50,10 @@ export async function handleLeaderboard(
     if (inTop10) {
       footer = "You're in the top 10!";
     } else if (userLevel && userLevel.xp > 0) {
-      const rank = await getRankPosition(interaction.guildId, interaction.user.id);
+      const rank = await getRankPosition(
+        interaction.guildId,
+        interaction.user.id,
+      );
       footer = `Your current rank is #${rank}. Keep earning XP to enter the top 10!`;
     } else {
       footer = "Start chatting to earn XP and appear on the leaderboard!";
