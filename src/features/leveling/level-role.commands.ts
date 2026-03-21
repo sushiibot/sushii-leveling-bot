@@ -201,7 +201,7 @@ export async function handleLevelRoleImportSubmit(
     return;
   }
 
-  await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
+  await interaction.deferReply();
 
   const raw = interaction.fields.getTextInputValue("roles");
 

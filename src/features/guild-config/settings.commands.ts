@@ -100,7 +100,7 @@ export async function handleSettings(
 async function handleSettingsBackground(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
+  await interaction.deferReply();
 
   const attachment = interaction.options.getAttachment("image", true);
 
@@ -203,7 +203,7 @@ async function handleSettingsExportLevels(
 async function handleSettingsImportLevels(
   interaction: ChatInputCommandInteraction,
 ): Promise<void> {
-  await interaction.deferReply({ flags: MessageFlags.IsComponentsV2 });
+  await interaction.deferReply();
 
   const attachment = interaction.options.getAttachment("file", true);
   // biome-ignore lint/style/noNonNullAssertion: guildId checked above
