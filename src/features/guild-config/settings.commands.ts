@@ -1,4 +1,5 @@
 import {
+  AttachmentBuilder,
   type ChatInputCommandInteraction,
   ContainerBuilder,
   InteractionContextType,
@@ -8,6 +9,7 @@ import {
   TextDisplayBuilder,
 } from "discord.js";
 import { importFromCsv } from "../import/import.service";
+import { getAllGuildUsers } from "../leveling/leveling.repo";
 import {
   CATPPUCCIN_ACCENT_COLORS,
   invalidateBackgroundCache,
@@ -54,6 +56,11 @@ export const settingsCommand = new SlashCommandBuilder()
   )
   .addSubcommand((sub) =>
     sub
+      .setName("export-levels")
+      .setDescription("Export leveling data as a CSV file"),
+  )
+  .addSubcommand((sub) =>
+    sub
       .setName("import-levels")
       .setDescription("Import leveling data from a CSV file attachment")
       .addAttachmentOption((opt) =>
@@ -83,6 +90,8 @@ export async function handleSettings(
     await handleSettingsBackground(interaction);
   } else if (sub === "color") {
     await handleSettingsColor(interaction);
+  } else if (sub === "export-levels") {
+    await handleSettingsExportLevels(interaction);
   } else if (sub === "import-levels") {
     await handleSettingsImportLevels(interaction);
   }
@@ -157,6 +166,37 @@ async function handleSettingsColor(
     components: [
       container(`## Settings: Theme Color\n\nTheme color set to **${color}**.`),
     ],
+  });
+}
+
+async function handleSettingsExportLevels(
+  interaction: ChatInputCommandInteraction,
+): Promise<void> {
+  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
+  const guildId = interaction.guildId!;
+  const users = await getAllGuildUsers(guildId);
+
+  if (users.length === 0) {
+    await interaction.reply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        container(
+          "## Settings: Export Levels\n\nNo leveling data found for this server.",
+        ),
+      ],
+    });
+    return;
+  }
+
+  const lines = ["platformId,XP,currentLevel"];
+  for (const user of users) {
+    lines.push(`${user.userId},${user.xp},${user.level}`);
+  }
+  const csv = lines.join("\n");
+  const buffer = Buffer.from(csv, "utf-8");
+
+  await interaction.reply({
+    files: [new AttachmentBuilder(buffer, { name: "levels.csv" })],
   });
 }
 

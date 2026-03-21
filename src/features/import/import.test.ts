@@ -8,9 +8,8 @@ import { levelFromXp } from "../leveling/xp";
 import { parseCsv } from "./csv";
 
 // Dynamic imports so the in-memory DATABASE_URL is used
-const { bulkUpsertUserLevels, getRankPosition } = await import(
-  "../leveling/leveling.repo"
-);
+const { bulkUpsertUserLevels, getAllGuildUsers, getRankPosition } =
+  await import("../leveling/leveling.repo");
 const { runMigrations } = await import("../../db");
 
 runMigrations();
@@ -78,6 +77,32 @@ describe("parseCsv", () => {
       parseCsv("platformId,username,XP,currentLevel\n123,alice,notanumber,5"),
     ).toThrow("Non-numeric");
   });
+
+  test("parses CSV without username column", () => {
+    const result = parseCsv("platformId,XP,currentLevel\n111,100,2");
+    expect(result).toHaveLength(1);
+    expect(result[0]).toMatchObject({ platformId: "111", xp: 100, level: 2 });
+    expect(result[0]?.username).toBeUndefined();
+  });
+
+  test("parses multiple rows without username column", () => {
+    const csv = "platformId,XP,currentLevel\n111,100,2\n222,500,5";
+    const result = parseCsv(csv);
+    expect(result).toHaveLength(2);
+    expect(result[1]).toMatchObject({ platformId: "222", xp: 500, level: 5 });
+  });
+
+  test("still parses CSV with username column (backwards compat)", () => {
+    const result = parseCsv(
+      "platformId,username,XP,currentLevel\n123,alice,200,3",
+    );
+    expect(result[0]).toMatchObject({
+      platformId: "123",
+      username: "alice",
+      xp: 200,
+      level: 3,
+    });
+  });
 });
 
 describe("import + rank calculation", () => {
@@ -106,6 +131,72 @@ describe("import + rank calculation", () => {
     for (const [i, row] of sortedByXp.entries()) {
       const rank = await getRankPosition(GUILD_ID, row.platformId);
       expect(rank).toBe(i + 1);
+    }
+  });
+});
+
+describe("getAllGuildUsers", () => {
+  test("returns all users for the guild", async () => {
+    const users = await getAllGuildUsers(GUILD_ID);
+    expect(users).toHaveLength(rows.length);
+  });
+
+  test("returns users ordered by XP descending", async () => {
+    const users = await getAllGuildUsers(GUILD_ID);
+    for (let i = 0; i < users.length - 1; i++) {
+      expect(users[i]!.xp).toBeGreaterThanOrEqual(users[i + 1]!.xp);
+    }
+  });
+
+  test("returns empty array for unknown guild", async () => {
+    const users = await getAllGuildUsers("nonexistent-guild");
+    expect(users).toHaveLength(0);
+  });
+
+  test("UserLevel instances have correct level computed from XP", async () => {
+    const users = await getAllGuildUsers(GUILD_ID);
+    for (const user of users) {
+      expect(user.level).toBe(levelFromXp(user.xp));
+    }
+  });
+});
+
+describe("export + re-import round-trip", () => {
+  const EXPORT_GUILD_ID = "export-test-guild";
+
+  beforeAll(async () => {
+    await bulkUpsertUserLevels(
+      EXPORT_GUILD_ID,
+      rows.map((r) => ({ userId: r.platformId, xp: r.xp, level: r.level })),
+    );
+  });
+
+  test("exported CSV can be re-parsed by parseCsv", async () => {
+    const users = await getAllGuildUsers(EXPORT_GUILD_ID);
+    const lines = ["platformId,XP,currentLevel"];
+    for (const user of users) {
+      lines.push(`${user.userId},${user.xp},${user.level}`);
+    }
+    const csv = lines.join("\n");
+
+    const reparsed = parseCsv(csv);
+    expect(reparsed).toHaveLength(users.length);
+  });
+
+  test("re-parsed rows match original XP and level values", async () => {
+    const users = await getAllGuildUsers(EXPORT_GUILD_ID);
+    const lines = ["platformId,XP,currentLevel"];
+    for (const user of users) {
+      lines.push(`${user.userId},${user.xp},${user.level}`);
+    }
+    const reparsed = parseCsv(lines.join("\n"));
+
+    for (const [i, user] of users.entries()) {
+      expect(reparsed[i]).toMatchObject({
+        platformId: user.userId,
+        xp: user.xp,
+        level: user.level,
+      });
     }
   });
 });

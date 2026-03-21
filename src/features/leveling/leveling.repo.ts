@@ -73,6 +73,14 @@ export async function getTopUsers(
   return rows.map(UserLevel.from);
 }
 
+export async function getAllGuildUsers(guildId: string): Promise<UserLevel[]> {
+  const rows = await db.query.userLevels.findMany({
+    where: eq(userLevels.guildId, guildId),
+    orderBy: desc(userLevels.xp),
+  });
+  return rows.map(UserLevel.from);
+}
+
 export interface BulkUpsertResult {
   total: number;
   levelMismatches: number;

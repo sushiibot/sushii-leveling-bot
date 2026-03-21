@@ -1,6 +1,6 @@
 export interface CsvRow {
   platformId: string;
-  username: string;
+  username?: string;
   xp: number;
   level: number;
 }
@@ -20,15 +20,8 @@ export function parseCsv(text: string): CsvRow[] {
   const xpIdx = headers.indexOf("xp");
   const levelIdx = headers.indexOf("currentlevel");
 
-  if (
-    platformIdIdx === -1 ||
-    usernameIdx === -1 ||
-    xpIdx === -1 ||
-    levelIdx === -1
-  ) {
-    throw new Error(
-      "CSV must have columns: platformId, username, XP, currentLevel",
-    );
+  if (platformIdIdx === -1 || xpIdx === -1 || levelIdx === -1) {
+    throw new Error("CSV must have columns: platformId, XP, currentLevel");
   }
 
   const rows: CsvRow[] = [];
@@ -39,16 +32,11 @@ export function parseCsv(text: string): CsvRow[] {
 
     const cols = line.split(",");
     const platformId = cols[platformIdIdx]?.trim();
-    const username = cols[usernameIdx]?.trim();
+    const username = usernameIdx !== -1 ? cols[usernameIdx]?.trim() : undefined;
     const xpRaw = cols[xpIdx]?.trim();
     const levelRaw = cols[levelIdx]?.trim();
 
-    if (
-      !platformId ||
-      !username ||
-      xpRaw === undefined ||
-      levelRaw === undefined
-    ) {
+    if (!platformId || xpRaw === undefined || levelRaw === undefined) {
       throw new Error(`Invalid row at line ${i + 1}: ${line}`);
     }
 
