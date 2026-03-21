@@ -53,9 +53,6 @@ async function handleLevelUp(
     const member = await guild.members.fetch(userId);
     await Promise.all(earnedRoles.map((r) => member.roles.add(r.roleId)));
   } catch (err) {
-    logger.error(
-      err,
-      `Failed to assign roles to ${userId} in ${guildId}`,
-    );
+    logger.error(err, `Failed to assign roles to ${userId} in ${guildId}`);
   }
 }

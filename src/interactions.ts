@@ -7,10 +7,10 @@ import {
 import { handleSettings } from "./features/guild-config/settings.commands";
 import { handleLeaderboard } from "./features/leveling/leaderboard.commands";
 import {
-  LEVEL_ROLE_IMPORT_MODAL_ID,
   handleLevelRole,
   handleLevelRoleAutocomplete,
   handleLevelRoleImportSubmit,
+  LEVEL_ROLE_IMPORT_MODAL_ID,
 } from "./features/leveling/level-role.commands";
 import { handleLevel } from "./features/leveling/leveling.commands";
 import logger from "./logger";
