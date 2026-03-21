@@ -29,6 +29,7 @@
     "@napi-rs/canvas": "^0.1.97",
     "discord.js": "^14.25.1",
     "drizzle-orm": "^0.45.1",
+    "hono": "^4.12.8",
     "pino": "^10.3.1"
   }
 }

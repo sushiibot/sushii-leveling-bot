@@ -5,6 +5,10 @@ RUN bun install --frozen-lockfile --production
 
 FROM oven/bun:1.3
 
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends curl && \
+    rm -rf /var/lib/apt/lists/*
+
 # Static labels
 LABEL org.opencontainers.image.source=https://github.com/sushiibot/sushii-leveling-bot
 LABEL org.opencontainers.image.description="Discord XP leveling bot"
@@ -30,5 +34,8 @@ ENV BUILD_DATE=${BUILD_DATE}
 
 LABEL org.opencontainers.image.revision=${GIT_HASH}
 LABEL org.opencontainers.image.created=${BUILD_DATE}
+
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+  CMD curl -f http://localhost:3000/health || exit 1
 
 CMD ["bun", "run", "src/index.ts"]
