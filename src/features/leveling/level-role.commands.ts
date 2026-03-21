@@ -218,7 +218,9 @@ export async function handleLevelRoleImportSubmit(
 
     const mentionMatch = line.match(ROLE_MENTION_RE);
     if (mentionMatch) {
+      // biome-ignore lint/style/noNonNullAssertion: regex capture groups are guaranteed when match succeeds
       const level = parseInt(mentionMatch[1]!, 10);
+      // biome-ignore lint/style/noNonNullAssertion: regex capture groups are guaranteed when match succeeds
       const roleId = mentionMatch[2]!;
       const role = interaction.guild.roles.cache.get(roleId);
       if (!role) {
@@ -233,7 +235,9 @@ export async function handleLevelRoleImportSubmit(
 
     const nameMatch = line.match(ROLE_NAME_RE);
     if (nameMatch) {
+      // biome-ignore lint/style/noNonNullAssertion: regex capture groups are guaranteed when match succeeds
       const level = parseInt(nameMatch[1]!, 10);
+      // biome-ignore lint/style/noNonNullAssertion: regex capture groups are guaranteed when match succeeds
       const roleName = nameMatch[2]!.trim();
       const role = interaction.guild.roles.cache.find(
         (r) => r.name.toLowerCase() === roleName.toLowerCase(),

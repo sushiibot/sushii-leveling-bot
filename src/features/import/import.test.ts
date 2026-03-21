@@ -144,6 +144,7 @@ describe("getAllGuildUsers", () => {
   test("returns users ordered by XP descending", async () => {
     const users = await getAllGuildUsers(GUILD_ID);
     for (let i = 0; i < users.length - 1; i++) {
+      // biome-ignore lint/style/noNonNullAssertion: index is within bounds (loop condition guarantees i and i+1 exist)
       expect(users[i]!.xp).toBeGreaterThanOrEqual(users[i + 1]!.xp);
     }
   });

@@ -2,6 +2,7 @@
 process.env.DATABASE_URL = ":memory:";
 
 import { describe, expect, mock, spyOn, test } from "bun:test";
+import assert from "node:assert";
 import type { Guild } from "discord.js";
 
 // Dynamic imports so the in-memory DATABASE_URL is used
@@ -36,11 +37,11 @@ describe("grantXp", () => {
     await grantXp(guildId, userId, guild);
 
     const record = await getUserLevel(guildId, userId);
-    expect(record).toBeDefined();
+    assert.ok(record);
     // Default XP range is 15–25
-    expect(record!.xp).toBeGreaterThanOrEqual(15);
-    expect(record!.xp).toBeLessThanOrEqual(25);
-    expect(record!.messageCount).toBe(1);
+    expect(record.xp).toBeGreaterThanOrEqual(15);
+    expect(record.xp).toBeLessThanOrEqual(25);
+    expect(record.messageCount).toBe(1);
   });
 
   test("correct level is set when leveling up", async () => {
@@ -53,7 +54,8 @@ describe("grantXp", () => {
     await grantXp(guildId, userId, guild);
 
     const record = await getUserLevel(guildId, userId);
-    expect(record!.level).toBe(1);
+    assert.ok(record);
+    expect(record.level).toBe(1);
   });
 
   test("level role is assigned when user levels up", async () => {
@@ -85,14 +87,16 @@ describe("grantXp", () => {
     // First grant succeeds.
     await grantXp(guildId, userId, guild);
     const afterFirst = await getUserLevel(guildId, userId);
-    const xpAfterFirst = afterFirst!.xp;
+    assert.ok(afterFirst);
+    const xpAfterFirst = afterFirst.xp;
 
     // Immediate second call — still within the 60-second cooldown window.
     await grantXp(guildId, userId, guild);
     const afterSecond = await getUserLevel(guildId, userId);
+    assert.ok(afterSecond);
 
-    expect(afterSecond!.xp).toBe(xpAfterFirst);
-    expect(afterSecond!.messageCount).toBe(1);
+    expect(afterSecond.xp).toBe(xpAfterFirst);
+    expect(afterSecond.messageCount).toBe(1);
   });
 
   test("cooldown expires and xp is granted again", async () => {
@@ -110,15 +114,17 @@ describe("grantXp", () => {
       dateNow.mockReturnValue(BASE);
       await grantXp(guildId, userId, guild);
       const afterFirst = await getUserLevel(guildId, userId);
-      const xpAfterFirst = afterFirst!.xp;
+      assert.ok(afterFirst);
+      const xpAfterFirst = afterFirst.xp;
 
       // Second call at BASE + 61s — past the 60-second default cooldown.
       dateNow.mockReturnValue(BASE + 61_000);
       await grantXp(guildId, userId, guild);
       const afterSecond = await getUserLevel(guildId, userId);
+      assert.ok(afterSecond);
 
-      expect(afterSecond!.xp).toBeGreaterThan(xpAfterFirst);
-      expect(afterSecond!.messageCount).toBe(2);
+      expect(afterSecond.xp).toBeGreaterThan(xpAfterFirst);
+      expect(afterSecond.messageCount).toBe(2);
     } finally {
       dateNow.mockRestore();
     }

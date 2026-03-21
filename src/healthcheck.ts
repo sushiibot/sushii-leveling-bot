@@ -1,5 +1,5 @@
 import { serve } from "bun";
-import { Status, type Client } from "discord.js";
+import { type Client, Status } from "discord.js";
 import { Hono } from "hono";
 import logger from "./logger";
 
