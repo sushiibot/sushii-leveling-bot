@@ -1,4 +1,3 @@
-import { join } from "node:path";
 import { fileURLToPath } from "node:url";
 import {
   createCanvas,
@@ -12,18 +11,60 @@ import { xpForNextLevelUp, xpInCurrentLevel } from "../leveling/xp";
 // ---------------------------------------------------------------------------
 // Font registration (runs once at module load)
 // ---------------------------------------------------------------------------
-const __dirname = fileURLToPath(new URL(".", import.meta.url));
-const FONTS_DIR = join(__dirname, "fonts");
-
-GlobalFonts.registerFromPath(join(FONTS_DIR, "Poppins-Regular.ttf"), "Poppins");
 GlobalFonts.registerFromPath(
-  join(FONTS_DIR, "Poppins-SemiBold.ttf"),
+  fileURLToPath(import.meta.resolve("./fonts/Poppins-Regular.ttf")),
+  "Poppins",
+);
+GlobalFonts.registerFromPath(
+  fileURLToPath(import.meta.resolve("./fonts/Poppins-SemiBold.ttf")),
   "Poppins SemiBold",
 );
 GlobalFonts.registerFromPath(
-  join(FONTS_DIR, "Poppins-Bold.ttf"),
+  fileURLToPath(import.meta.resolve("./fonts/Poppins-Bold.ttf")),
   "Poppins Bold",
 );
+
+// ---------------------------------------------------------------------------
+// Username sanitization
+// @napi-rs/canvas does not do per-glyph font fallback, so characters outside
+// Poppins' coverage render as boxes. Strip them from the username instead.
+// Ranges derived from @fontsource/poppins CSS unicode-range declarations.
+// ---------------------------------------------------------------------------
+const POPPINS_RANGES: [number, number][] = [
+  [0x0000, 0x00ff], // Basic Latin + Latin-1 Supplement
+  [0x0100, 0x02ba], // Latin Extended A/B
+  [0x02bd, 0x02ff],
+  [0x0304, 0x0304],
+  [0x0308, 0x0308],
+  [0x0329, 0x0329],
+  [0x0900, 0x097f], // Devanagari
+  [0x1cd0, 0x1cf9],
+  [0x1d00, 0x1dbf],
+  [0x1e00, 0x1e9f],
+  [0x1ef2, 0x1eff],
+  [0x2000, 0x206f], // General Punctuation
+  [0x20a0, 0x20c0], // Currency Symbols
+  [0x2113, 0x2113],
+  [0x2122, 0x2122],
+  [0x2191, 0x2191],
+  [0x2193, 0x2193],
+  [0x2212, 0x2212],
+  [0x2215, 0x2215],
+  [0x2c60, 0x2c7f],
+  [0xa720, 0xa7ff],
+  [0xfeff, 0xfeff],
+  [0xfffd, 0xfffd],
+];
+
+function stripUnsupportedChars(text: string): string {
+  return [...text]
+    .filter((char) => {
+      // biome-ignore lint/style/noNonNullAssertion: iterating valid string chars
+      const cp = char.codePointAt(0)!;
+      return POPPINS_RANGES.some(([lo, hi]) => cp >= lo && cp <= hi);
+    })
+    .join("");
+}
 
 // ---------------------------------------------------------------------------
 // Catppuccin Mocha palette
@@ -149,7 +190,7 @@ export async function renderRankCard(
   ctx.font = `600 38px "Poppins SemiBold", Poppins, sans-serif`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(username, CONTENT_X, 155);
+  ctx.fillText(stripUnsupportedChars(username), CONTENT_X, 155);
 
   // --- Rank & Level (top right) ---
   drawStatBlock(
