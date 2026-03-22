@@ -27,12 +27,12 @@ export async function handleLevel(
 ): Promise<void> {
   await interaction.deferReply();
 
-  const targetUser =
-    interaction.options.getUser(OPTION_USER) ?? interaction.user;
+  const optionUser = interaction.options.getUser(OPTION_USER);
+  const targetUser = optionUser ?? interaction.user;
   // If a user option was provided, getMember may return null if they left the
   // server — fall back to the User. Otherwise use interaction.member (invoker
   // is always present).
-  const targetMember = interaction.options.getUser(OPTION_USER)
+  const targetMember = optionUser
     ? (interaction.options.getMember(OPTION_USER) ?? targetUser)
     : interaction.member;
   const guildId = interaction.guildId;
