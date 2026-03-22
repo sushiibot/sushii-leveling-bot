@@ -75,6 +75,13 @@ export const settingsCommand = new SlashCommandBuilder()
           .setDescription("Maximum XP per message (default: 25)")
           .setRequired(true)
           .setMinValue(1),
+      )
+      .addIntegerOption((opt) =>
+        opt
+          .setName("cooldown-seconds")
+          .setDescription("Cooldown between XP grants in seconds (default: 60)")
+          .setRequired(false)
+          .setMinValue(5),
       ),
   )
   .addSubcommand((sub) =>
@@ -188,6 +195,8 @@ async function handleSettingsXpRate(
 ): Promise<void> {
   const min = interaction.options.getInteger("min", true);
   const max = interaction.options.getInteger("max", true);
+  const cooldownSeconds =
+    interaction.options.getInteger("cooldown-seconds") ?? undefined;
 
   if (min > max) {
     await interaction.reply({
@@ -201,13 +210,18 @@ async function handleSettingsXpRate(
     return;
   }
 
-  await upsertXpRate(interaction.guildId, min, max);
+  await upsertXpRate(interaction.guildId, min, max, cooldownSeconds);
+
+  const cooldownNote =
+    cooldownSeconds !== undefined
+      ? ` Cooldown set to **${cooldownSeconds}s**.`
+      : "";
 
   await interaction.reply({
     flags: MessageFlags.IsComponentsV2,
     components: [
       container(
-        `## Settings: XP Rate\n\nXP rate set to **${min}–${max}** per message.`,
+        `## Settings: XP Rate\n\nXP rate set to **${min}–${max}** per message.${cooldownNote}`,
       ),
     ],
   });

@@ -28,13 +28,16 @@ export async function upsertXpRate(
   guildId: string,
   xpMin: number,
   xpMax: number,
+  cooldownSeconds?: number,
 ): Promise<void> {
+  const set: Partial<typeof guildConfigs.$inferInsert> = { xpMin, xpMax };
+  if (cooldownSeconds !== undefined) set.cooldownSeconds = cooldownSeconds;
   await db
     .insert(guildConfigs)
-    .values({ guildId, xpMin, xpMax })
+    .values({ guildId, xpMin, xpMax, ...set })
     .onConflictDoUpdate({
       target: guildConfigs.guildId,
-      set: { xpMin, xpMax },
+      set,
     });
 }
 
