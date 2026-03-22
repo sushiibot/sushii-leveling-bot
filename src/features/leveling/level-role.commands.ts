@@ -71,16 +71,8 @@ export const levelRoleCommand = new SlashCommandBuilder()
   );
 
 export async function handleLevelRole(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
-  if (!interaction.guildId) {
-    await interaction.reply({
-      flags: MessageFlags.IsComponentsV2,
-      components: [container("This command can only be used in a server.")],
-    });
-    return;
-  }
-
   const sub = interaction.options.getSubcommand();
 
   if (sub === "set") {
@@ -95,13 +87,12 @@ export async function handleLevelRole(
 }
 
 async function handleLevelRoleUpsert(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
   const level = interaction.options.getInteger("level", true);
   const role = interaction.options.getRole("role", true);
 
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  await upsertLevelRole(interaction.guildId!, level, role.id);
+  await upsertLevelRole(interaction.guildId, level, role.id);
 
   await interaction.reply({
     allowedMentions: { parse: [] },
@@ -115,12 +106,11 @@ async function handleLevelRoleUpsert(
 }
 
 async function handleLevelRoleDelete(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
   const level = interaction.options.getInteger("level", true);
 
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  const deleted = await deleteLevelRole(interaction.guildId!, level);
+  const deleted = await deleteLevelRole(interaction.guildId, level);
 
   const content = deleted
     ? `## Level Role Removed\n\n${roleMention(deleted.roleId)} (level ${level}) has been removed.`
@@ -134,21 +124,15 @@ async function handleLevelRoleDelete(
 }
 
 export async function handleLevelRoleAutocomplete(
-  interaction: AutocompleteInteraction,
+  interaction: AutocompleteInteraction<"cached">,
 ): Promise<void> {
-  if (!interaction.guildId) {
-    await interaction.respond([]);
-    return;
-  }
-
   const focused = interaction.options.getFocused(true);
   if (focused.name !== "level") {
     await interaction.respond([]);
     return;
   }
 
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  const roles = await getLevelRoles(interaction.guildId!);
+  const roles = await getLevelRoles(interaction.guildId);
 
   const query = focused.value.toString().toLowerCase();
 
@@ -156,7 +140,7 @@ export async function handleLevelRoleAutocomplete(
     .sort((a, b) => a.level - b.level)
     .map((r) => {
       const roleName =
-        interaction.guild?.roles.cache.get(r.roleId)?.name ?? r.roleId;
+        interaction.guild.roles.cache.get(r.roleId)?.name ?? r.roleId;
       return {
         name: `Level: ${r.level} - Role: ${roleName}`,
         value: r.level,
@@ -171,7 +155,7 @@ export async function handleLevelRoleAutocomplete(
 export const LEVEL_ROLE_IMPORT_MODAL_ID = "level-role-import";
 
 async function handleLevelRoleImportModal(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
   const modal = new ModalBuilder()
     .setCustomId(LEVEL_ROLE_IMPORT_MODAL_ID)
@@ -191,16 +175,8 @@ async function handleLevelRoleImportModal(
 }
 
 export async function handleLevelRoleImportSubmit(
-  interaction: ModalSubmitInteraction,
+  interaction: ModalSubmitInteraction<"cached">,
 ): Promise<void> {
-  if (!interaction.guildId || !interaction.guild) {
-    await interaction.reply({
-      flags: MessageFlags.Ephemeral,
-      content: "This command can only be used in a server.",
-    });
-    return;
-  }
-
   await interaction.deferReply();
 
   const raw = interaction.fields.getTextInputValue("roles");
@@ -270,10 +246,9 @@ export async function handleLevelRoleImportSubmit(
 }
 
 async function handleLevelRoleList(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  const roles = await getLevelRoles(interaction.guildId!);
+  const roles = await getLevelRoles(interaction.guildId);
 
   let content: string;
   if (roles.length === 0) {

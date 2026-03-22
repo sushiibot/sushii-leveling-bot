@@ -17,6 +17,8 @@ import logger from "./logger";
 
 export function registerInteractions(client: Client): void {
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
+    if (!interaction.inCachedGuild()) return;
+
     if (interaction.isModalSubmit()) {
       if (interaction.customId === LEVEL_ROLE_IMPORT_MODAL_ID) {
         await handleLevelRoleImportSubmit(interaction).catch((e) =>

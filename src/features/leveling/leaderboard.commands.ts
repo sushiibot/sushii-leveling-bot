@@ -20,22 +20,14 @@ export const leaderboardCommand = new SlashCommandBuilder()
   .setContexts(InteractionContextType.Guild);
 
 export async function handleLeaderboard(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
-  if (!interaction.guildId) {
-    await interaction.reply({
-      flags: MessageFlags.IsComponentsV2,
-      components: [container("This command can only be used in a server.")],
-    });
-    return;
-  }
-
   const [topUsers, userLevel] = await Promise.all([
     getTopUsers(interaction.guildId, 10),
     getUserLevel(interaction.guildId, interaction.user.id),
   ]);
 
-  const serverName = interaction.guild?.name ?? "Server";
+  const serverName = interaction.guild.name;
 
   let content: string;
   if (topUsers.length === 0) {

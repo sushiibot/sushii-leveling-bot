@@ -74,16 +74,8 @@ export const settingsCommand = new SlashCommandBuilder()
   );
 
 export async function handleSettings(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
-  if (!interaction.guildId) {
-    await interaction.reply({
-      flags: MessageFlags.IsComponentsV2,
-      components: [container("This command can only be used in a server.")],
-    });
-    return;
-  }
-
   const sub = interaction.options.getSubcommand();
 
   if (sub === "background") {
@@ -98,7 +90,7 @@ export async function handleSettings(
 }
 
 async function handleSettingsBackground(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
   await interaction.deferReply();
 
@@ -138,10 +130,8 @@ async function handleSettingsBackground(
   const imageBuffer = Buffer.from(await response.arrayBuffer());
   const mimeType = attachment.contentType ?? "image/png";
 
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  await upsertBackgroundBlob(interaction.guildId!, imageBuffer, mimeType);
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  invalidateBackgroundCache(interaction.guildId!);
+  await upsertBackgroundBlob(interaction.guildId, imageBuffer, mimeType);
+  invalidateBackgroundCache(interaction.guildId);
 
   await interaction.editReply({
     flags: MessageFlags.IsComponentsV2,
@@ -154,12 +144,11 @@ async function handleSettingsBackground(
 }
 
 async function handleSettingsColor(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
   const color = interaction.options.getString("color", true);
 
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  await upsertThemeColor(interaction.guildId!, color);
+  await upsertThemeColor(interaction.guildId, color);
 
   await interaction.reply({
     flags: MessageFlags.IsComponentsV2,
@@ -170,11 +159,9 @@ async function handleSettingsColor(
 }
 
 async function handleSettingsExportLevels(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  const guildId = interaction.guildId!;
-  const users = await getAllGuildUsers(guildId);
+  const users = await getAllGuildUsers(interaction.guildId);
 
   if (users.length === 0) {
     await interaction.reply({
@@ -201,17 +188,15 @@ async function handleSettingsExportLevels(
 }
 
 async function handleSettingsImportLevels(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
   await interaction.deferReply();
 
   const attachment = interaction.options.getAttachment("file", true);
-  // biome-ignore lint/style/noNonNullAssertion: guildId checked above
-  const guildId = interaction.guildId!;
 
   try {
     const { total, levelMismatches } = await importFromCsv(
-      guildId,
+      interaction.guildId,
       attachment.url,
     );
     const mismatchNote =
