@@ -59,6 +59,7 @@ for (const row of dbRows) {
     continue;
   }
 
+  // NOTE: hardcoded for 1 XP/msg — do not reuse for other rates
   const adjustedXp = csv.xp + row.messageCount;
   if (adjustedXp >= row.xp) continue; // no adjustment needed
 
