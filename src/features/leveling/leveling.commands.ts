@@ -2,12 +2,12 @@ import {
   AttachmentBuilder,
   type ChatInputCommandInteraction,
   InteractionContextType,
-  MessageFlags,
   SlashCommandBuilder,
 } from "discord.js";
 import { getGuildConfig } from "../guild-config/guild-config.service";
 import { renderRankCard } from "../rank-card/rank-card.service";
 import { getRankPosition, getUserLevel } from "./leveling.repo";
+import { syncLevelRoles } from "./leveling.service";
 import { UserLevel } from "./leveling.types";
 
 export const levelCommand = new SlashCommandBuilder()
@@ -19,16 +19,8 @@ export const levelCommand = new SlashCommandBuilder()
   );
 
 export async function handleLevel(
-  interaction: ChatInputCommandInteraction,
+  interaction: ChatInputCommandInteraction<"cached">,
 ): Promise<void> {
-  if (!interaction.guildId) {
-    await interaction.reply({
-      content: "This command can only be used in a server.",
-      flags: MessageFlags.Ephemeral,
-    });
-    return;
-  }
-
   await interaction.deferReply();
 
   const targetUser = interaction.options.getUser("user") ?? interaction.user;
@@ -43,9 +35,23 @@ export async function handleLevel(
     userLevel = new UserLevel(guildId, targetUser.id, 0, 0, new Date(0));
   }
 
+  const invokerSync =
+    interaction.user.id !== targetUser.id
+      ? getUserLevel(guildId, interaction.user.id).then((ul) =>
+          syncLevelRoles(
+            guildId,
+            interaction.user.id,
+            ul?.level ?? 0,
+            interaction.guild,
+          ),
+        )
+      : Promise.resolve();
+
   const [rank, config] = await Promise.all([
     userLevel.xp > 0 ? getRankPosition(guildId, targetUser.id) : null,
     getGuildConfig(guildId),
+    syncLevelRoles(guildId, targetUser.id, userLevel.level, interaction.guild),
+    invokerSync,
   ]);
 
   const avatarUrl = targetUser.displayAvatarURL({

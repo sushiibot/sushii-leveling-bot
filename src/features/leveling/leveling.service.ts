@@ -39,11 +39,11 @@ export async function grantXp(
       { guildId, userId, previousLevel, newLevel: updated.level },
       "User leveled up",
     );
-    await handleLevelUp(guildId, userId, updated.level, guild);
+    await syncLevelRoles(guildId, userId, updated.level, guild);
   }
 }
 
-async function handleLevelUp(
+export async function syncLevelRoles(
   guildId: string,
   userId: string,
   newLevel: number,
@@ -66,6 +66,18 @@ async function handleLevelUp(
     );
 
     await Promise.all(toAssign.map((r) => member.roles.add(r.roleId)));
+
+    if (toAssign.length > 0) {
+      logger.info(
+        {
+          guildId,
+          userId,
+          currentLevel: newLevel,
+          assigned: toAssign.map((r) => ({ roleId: r.roleId, level: r.level })),
+        },
+        "Assigned missing level roles",
+      );
+    }
 
     logger.debug(
       {
