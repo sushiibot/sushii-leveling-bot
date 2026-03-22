@@ -190,7 +190,16 @@ export async function renderRankCard(
   ctx.font = `600 38px "Poppins SemiBold", Poppins, sans-serif`;
   ctx.textAlign = "left";
   ctx.textBaseline = "alphabetic";
-  ctx.fillText(stripUnsupportedChars(username), CONTENT_X, 155);
+  const USERNAME_MAX_WIDTH = STATS_RIGHT - 160 - CONTENT_X - 20;
+  ctx.fillText(
+    truncateWithEllipsis(
+      ctx,
+      stripUnsupportedChars(username),
+      USERNAME_MAX_WIDTH,
+    ),
+    CONTENT_X,
+    155,
+  );
 
   // --- Rank & Level (top right) ---
   drawStatBlock(
@@ -374,6 +383,27 @@ function roundedRectPath(
   ctx.lineTo(x, y + radius);
   ctx.quadraticCurveTo(x, y, x + radius, y);
   ctx.closePath();
+}
+
+function truncateWithEllipsis(
+  ctx: SKRSContext2D,
+  text: string,
+  maxWidth: number,
+): string {
+  if (ctx.measureText(text).width <= maxWidth) return text;
+  const ellipsis = "…";
+  const ellipsisWidth = ctx.measureText(ellipsis).width;
+  let lo = 0;
+  let hi = text.length;
+  while (lo < hi) {
+    const mid = Math.ceil((lo + hi) / 2);
+    if (ctx.measureText(text.slice(0, mid)).width + ellipsisWidth <= maxWidth) {
+      lo = mid;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return text.slice(0, lo) + ellipsis;
 }
 
 function formatXp(current: number, total: number): string {
