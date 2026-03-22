@@ -35,6 +35,10 @@ export async function grantXp(
   const updated = await upsertXp(guildId, userId, xpGain, new Date(now));
 
   if (updated.level > previousLevel) {
+    logger.debug(
+      { guildId, userId, previousLevel, newLevel: updated.level },
+      "User leveled up",
+    );
     await handleLevelUp(guildId, userId, updated.level, guild);
   }
 }
@@ -47,11 +51,39 @@ async function handleLevelUp(
 ): Promise<void> {
   const allRoles = await getLevelRoles(guildId);
   const earnedRoles = allRoles.filter((r) => r.level <= newLevel);
+  const pendingRoles = allRoles.filter((r) => r.level > newLevel);
+
   if (earnedRoles.length === 0) return;
 
   try {
     const member = await guild.members.fetch(userId);
-    await Promise.all(earnedRoles.map((r) => member.roles.add(r.roleId)));
+
+    const toAssign = earnedRoles.filter(
+      (r) => !member.roles.cache.has(r.roleId),
+    );
+    const alreadyHad = earnedRoles.filter((r) =>
+      member.roles.cache.has(r.roleId),
+    );
+
+    await Promise.all(toAssign.map((r) => member.roles.add(r.roleId)));
+
+    logger.debug(
+      {
+        guildId,
+        userId,
+        newLevel,
+        assigned: toAssign.map((r) => ({ roleId: r.roleId, level: r.level })),
+        alreadyHad: alreadyHad.map((r) => ({
+          roleId: r.roleId,
+          level: r.level,
+        })),
+        notYetEarned: pendingRoles.map((r) => ({
+          roleId: r.roleId,
+          level: r.level,
+        })),
+      },
+      "Level roles processed",
+    );
   } catch (err) {
     logger.error(err, `Failed to assign roles to ${userId} in ${guildId}`);
   }

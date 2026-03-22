@@ -20,7 +20,7 @@ function makeGuild(roleAdd = mock(() => Promise.resolve(undefined))) {
   return {
     members: {
       fetch: mock((_userId: string) =>
-        Promise.resolve({ roles: { add: roleAdd } }),
+        Promise.resolve({ roles: { add: roleAdd, cache: new Map() } }),
       ),
     },
   } as unknown as Guild;
