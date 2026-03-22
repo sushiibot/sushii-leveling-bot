@@ -14,7 +14,11 @@ import {
   CATPPUCCIN_ACCENT_COLORS,
   invalidateBackgroundCache,
 } from "../rank-card/rank-card.service";
-import { upsertBackgroundBlob, upsertThemeColor } from "./guild-config.repo";
+import {
+  upsertBackgroundBlob,
+  upsertThemeColor,
+  upsertXpRate,
+} from "./guild-config.repo";
 
 const MAX_BACKGROUND_BYTES = 8 * 1024 * 1024; // 8 MB
 
@@ -56,6 +60,25 @@ export const settingsCommand = new SlashCommandBuilder()
   )
   .addSubcommand((sub) =>
     sub
+      .setName("xp-rate")
+      .setDescription("Set the XP awarded per message (min and max)")
+      .addIntegerOption((opt) =>
+        opt
+          .setName("min")
+          .setDescription("Minimum XP per message (default: 15)")
+          .setRequired(true)
+          .setMinValue(1),
+      )
+      .addIntegerOption((opt) =>
+        opt
+          .setName("max")
+          .setDescription("Maximum XP per message (default: 25)")
+          .setRequired(true)
+          .setMinValue(1),
+      ),
+  )
+  .addSubcommand((sub) =>
+    sub
       .setName("export-levels")
       .setDescription("Export leveling data as a CSV file"),
   )
@@ -82,6 +105,8 @@ export async function handleSettings(
     await handleSettingsBackground(interaction);
   } else if (sub === "color") {
     await handleSettingsColor(interaction);
+  } else if (sub === "xp-rate") {
+    await handleSettingsXpRate(interaction);
   } else if (sub === "export-levels") {
     await handleSettingsExportLevels(interaction);
   } else if (sub === "import-levels") {
@@ -154,6 +179,36 @@ async function handleSettingsColor(
     flags: MessageFlags.IsComponentsV2,
     components: [
       container(`## Settings: Theme Color\n\nTheme color set to **${color}**.`),
+    ],
+  });
+}
+
+async function handleSettingsXpRate(
+  interaction: ChatInputCommandInteraction<"cached">,
+): Promise<void> {
+  const min = interaction.options.getInteger("min", true);
+  const max = interaction.options.getInteger("max", true);
+
+  if (min > max) {
+    await interaction.reply({
+      flags: MessageFlags.IsComponentsV2,
+      components: [
+        container(
+          "## Settings: XP Rate\n\nMinimum XP cannot be greater than maximum XP.",
+        ),
+      ],
+    });
+    return;
+  }
+
+  await upsertXpRate(interaction.guildId, min, max);
+
+  await interaction.reply({
+    flags: MessageFlags.IsComponentsV2,
+    components: [
+      container(
+        `## Settings: XP Rate\n\nXP rate set to **${min}–${max}** per message.`,
+      ),
     ],
   });
 }

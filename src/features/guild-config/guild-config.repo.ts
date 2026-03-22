@@ -24,6 +24,20 @@ export async function upsertThemeColor(
     });
 }
 
+export async function upsertXpRate(
+  guildId: string,
+  xpMin: number,
+  xpMax: number,
+): Promise<void> {
+  await db
+    .insert(guildConfigs)
+    .values({ guildId, xpMin, xpMax })
+    .onConflictDoUpdate({
+      target: guildConfigs.guildId,
+      set: { xpMin, xpMax },
+    });
+}
+
 export async function upsertBackgroundBlob(
   guildId: string,
   blob: Buffer,
