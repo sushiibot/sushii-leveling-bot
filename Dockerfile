@@ -18,6 +18,7 @@ WORKDIR /app
 
 COPY --from=deps /app/node_modules ./node_modules
 COPY src ./src
+COPY scripts ./scripts
 COPY drizzle.config.ts ./
 
 ENV NODE_ENV=production
