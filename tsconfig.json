@@ -25,6 +25,5 @@
     "noUnusedLocals": true,
     "noUnusedParameters": true,
     "noPropertyAccessFromIndexSignature": false
-  },
-  "exclude": ["scripts"]
+  }
 }
