@@ -3,8 +3,11 @@ import { runMigrations } from "./db";
 import { registerClientEvents } from "./events";
 import { registerLevelingEvents } from "./features/leveling/leveling.events";
 import { HealthcheckService } from "./healthcheck";
+import { setupOtel } from "./instrumentation";
 import { registerInteractions } from "./interactions";
 import logger from "./logger";
+
+const otel = setupOtel();
 
 const token = process.env.DISCORD_TOKEN;
 const clientId = process.env.CLIENT_ID;
@@ -27,14 +30,13 @@ registerLevelingEvents(client);
 registerInteractions(client);
 registerClientEvents(client, token, clientId);
 
-process.on("SIGINT", () => {
+const shutdown = async () => {
   healthcheck.stop();
+  await otel.shutdown();
   process.exit(0);
-});
+};
 
-process.on("SIGTERM", () => {
-  healthcheck.stop();
-  process.exit(0);
-});
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 await client.login(token);

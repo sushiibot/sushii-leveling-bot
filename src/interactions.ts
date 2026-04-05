@@ -1,3 +1,4 @@
+import { trace } from "@opentelemetry/api";
 import {
   type Client,
   Events,
@@ -14,6 +15,11 @@ import {
 } from "./features/leveling/level-role.commands";
 import { handleLevel } from "./features/leveling/leveling.commands";
 import logger from "./logger";
+import { createSpanHelper } from "./tracing";
+
+const withSpan = createSpanHelper(
+  trace.getTracer("sushii-leveling-bot/interactions"),
+);
 
 export function registerInteractions(client: Client): void {
   client.on(Events.InteractionCreate, async (interaction: Interaction) => {
@@ -51,20 +57,32 @@ export function registerInteractions(client: Client): void {
     );
 
     try {
-      switch (interaction.commandName) {
-        case "level":
-          await handleLevel(interaction);
-          break;
-        case "leaderboard":
-          await handleLeaderboard(interaction);
-          break;
-        case "settings":
-          await handleSettings(interaction);
-          break;
-        case "level-role":
-          await handleLevelRole(interaction);
-          break;
-      }
+      const subcommand = interaction.options.getSubcommand(false);
+      await withSpan(
+        "command.handle",
+        {
+          "command.name": interaction.commandName,
+          ...(subcommand && { "command.subcommand": subcommand }),
+          "user.id": interaction.user.id,
+          "guild.id": interaction.guildId,
+        },
+        async () => {
+          switch (interaction.commandName) {
+            case "level":
+              await handleLevel(interaction);
+              break;
+            case "leaderboard":
+              await handleLeaderboard(interaction);
+              break;
+            case "settings":
+              await handleSettings(interaction);
+              break;
+            case "level-role":
+              await handleLevelRole(interaction);
+              break;
+          }
+        },
+      );
     } catch (err) {
       logger.error(
         { err, command: interaction.commandName },

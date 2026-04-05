@@ -1,8 +1,14 @@
+import { trace } from "@opentelemetry/api";
 import type { Guild } from "discord.js";
 import logger from "../../logger";
+import { createSpanHelper } from "../../tracing";
 import { getLevelRoles } from "../guild-config/guild-config.repo";
 import { getGuildConfig } from "../guild-config/guild-config.service";
 import { getUserLevel, upsertXp } from "./leveling.repo";
+
+const withSpan = createSpanHelper(
+  trace.getTracer("sushii-leveling-bot/leveling"),
+);
 
 // cooldown tracking: "guildId:userId" → unix timestamp (ms)
 const cooldowns = new Map<string, number>();
@@ -12,38 +18,57 @@ export async function grantXp(
   userId: string,
   guild: Guild,
 ): Promise<void> {
-  const config = await getGuildConfig(guildId);
+  return withSpan(
+    "xp.grant",
+    { "guild.id": guildId, "user.id": userId },
+    async () => {
+      const config = await getGuildConfig(guildId);
 
-  const key = `${guildId}:${userId}`;
-  const now = Date.now();
-  const lastGrant = cooldowns.get(key) ?? 0;
-  const cooldownMs = config.cooldownSeconds * 1000;
+      const key = `${guildId}:${userId}`;
+      const now = Date.now();
+      const lastGrant = cooldowns.get(key) ?? 0;
+      const cooldownMs = config.cooldownSeconds * 1000;
 
-  if (now - lastGrant < cooldownMs) {
-    return;
-  }
+      if (now - lastGrant < cooldownMs) {
+        return;
+      }
 
-  cooldowns.set(key, now);
+      cooldowns.set(key, now);
 
-  const xpGain =
-    Math.floor(Math.random() * (config.xpMax - config.xpMin + 1)) +
-    config.xpMin;
+      const xpGain =
+        Math.floor(Math.random() * (config.xpMax - config.xpMin + 1)) +
+        config.xpMin;
 
-  const existing = await getUserLevel(guildId, userId);
-  const previousLevel = existing?.level ?? 0;
+      const existing = await getUserLevel(guildId, userId);
+      const previousLevel = existing?.level ?? 0;
 
-  const updated = await upsertXp(guildId, userId, xpGain, new Date(now));
+      const updated = await upsertXp(guildId, userId, xpGain, new Date(now));
 
-  if (updated.level > previousLevel) {
-    logger.debug(
-      { guildId, userId, previousLevel, newLevel: updated.level },
-      "User leveled up",
-    );
-    await syncLevelRoles(guildId, userId, updated.level, guild);
-  }
+      if (updated.level > previousLevel) {
+        logger.debug(
+          { guildId, userId, previousLevel, newLevel: updated.level },
+          "User leveled up",
+        );
+        await syncLevelRoles(guildId, userId, updated.level, guild);
+      }
+    },
+  );
 }
 
 export async function syncLevelRoles(
+  guildId: string,
+  userId: string,
+  newLevel: number,
+  guild: Guild,
+): Promise<void> {
+  return withSpan(
+    "xp.sync_level_roles",
+    { "guild.id": guildId, "user.id": userId, "user.level": newLevel },
+    async () => syncLevelRolesInner(guildId, userId, newLevel, guild),
+  );
+}
+
+async function syncLevelRolesInner(
   guildId: string,
   userId: string,
   newLevel: number,
