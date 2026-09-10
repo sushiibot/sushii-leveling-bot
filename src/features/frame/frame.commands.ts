@@ -1,8 +1,12 @@
 import {
   AttachmentBuilder,
   type ChatInputCommandInteraction,
+  ContainerBuilder,
   InteractionContextType,
+  MediaGalleryBuilder,
+  MessageFlags,
   SlashCommandBuilder,
+  TextDisplayBuilder,
 } from "discord.js";
 import {
   FRAME_STYLES,
@@ -67,8 +71,21 @@ export async function handleAvatarFrame(
     name: ATTACHMENT_NAME,
   });
 
+  const container = new ContainerBuilder()
+    .addTextDisplayComponents(
+      new TextDisplayBuilder().setContent(
+        `Here's your new **${chosenStyle.name}** avatar! Download the image and set it in your Discord settings.`,
+      ),
+    )
+    .addMediaGalleryComponents(
+      new MediaGalleryBuilder().addItems((item) =>
+        item.setURL(`attachment://${ATTACHMENT_NAME}`),
+      ),
+    );
+
   await interaction.editReply({
-    content: `**${chosenStyle.name}** frame`,
+    flags: MessageFlags.IsComponentsV2,
+    components: [container],
     files: [attachment],
   });
 }
