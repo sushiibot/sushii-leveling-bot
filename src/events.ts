@@ -5,6 +5,7 @@ import {
   REST,
   Routes,
 } from "discord.js";
+import { avatarFrameCommand } from "./features/frame/frame.commands";
 import { settingsCommand } from "./features/guild-config/settings.commands";
 import { leaderboardCommand } from "./features/leveling/leaderboard.commands";
 import { levelRoleCommand } from "./features/leveling/level-role.commands";
@@ -16,6 +17,7 @@ const COMMANDS = [
   leaderboardCommand,
   settingsCommand,
   levelRoleCommand,
+  avatarFrameCommand,
 ];
 
 export function registerClientEvents(

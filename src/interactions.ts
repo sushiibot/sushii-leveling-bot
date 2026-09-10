@@ -5,6 +5,7 @@ import {
   type Interaction,
   MessageFlags,
 } from "discord.js";
+import { handleAvatarFrame } from "./features/frame/frame.commands";
 import { handleSettings } from "./features/guild-config/settings.commands";
 import { handleLeaderboard } from "./features/leveling/leaderboard.commands";
 import {
@@ -79,6 +80,9 @@ export function registerInteractions(client: Client): void {
               break;
             case "level-role":
               await handleLevelRole(interaction);
+              break;
+            case "avatar-frame":
+              await handleAvatarFrame(interaction);
               break;
           }
         },
