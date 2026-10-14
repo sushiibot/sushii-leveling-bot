@@ -6,12 +6,13 @@ import { HealthcheckService } from "./healthcheck";
 import { setupOtel } from "./instrumentation";
 import { registerInteractions } from "./interactions";
 import logger from "./logger";
+import { assertRequiredSecrets, requireSecret } from "./secrets";
 
 const otel = setupOtel();
 
-const token = process.env.DISCORD_TOKEN;
+assertRequiredSecrets();
+const token = requireSecret("DISCORD_TOKEN");
 const clientId = process.env.CLIENT_ID;
-if (!token) throw new Error("DISCORD_TOKEN is not set");
 if (!clientId) throw new Error("CLIENT_ID is not set");
 
 runMigrations();
