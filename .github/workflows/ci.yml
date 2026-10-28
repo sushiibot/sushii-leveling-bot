@@ -39,6 +39,7 @@ jobs:
       packages: write
 
   deploy:
+    # Grant this repository access to both the CI App client ID variable and private key secret.
     needs: docker-build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
     permissions:
