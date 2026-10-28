@@ -37,3 +37,18 @@ jobs:
     permissions:
       contents: read
       packages: write
+
+  deploy:
+    needs: docker-build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    permissions:
+      contents: read
+      actions: read
+      statuses: write
+    uses: sushiibot/sushii-workflows/.github/workflows/release-auto.yml@86493aecc426db554f9f3f220225516c01a9c110 # release preset
+    with:
+      image_version: ${{ needs.docker-build.outputs.image_version }}
+      environment: production
+      require_approval: true
+    secrets:
+      SUSHII_CI_PRIVATE_KEY: ${{ secrets.SUSHII_CI_PRIVATE_KEY }}
